@@ -5,6 +5,7 @@ jQuery(document).ready(function ($) {
     var name;
     var cb_anzahl;
     var map;
+    var id_check;
     $("#check").submit(function (event) {
 
         event.preventDefault();
@@ -21,10 +22,7 @@ jQuery(document).ready(function ($) {
                 var proof = "";
                 for (var i = 0; i < jsonResponse.features.length; i++) {
                     proof = proof + "<div class='row'><div class='col-md-2'>" + jsonResponse.features[i].properties.name + "</div><div class='col-md-2'><button value='" + i + "' class='btn btn-primary anmeldung'>Ja</button></div></div>"
-
                 }
-
-// create the tile layer with correct attribution
                 document.getElementById('proof').innerHTML = proof
                 document.getElementById("proof").classList.remove('invisible');
                 document.getElementById("back").classList.remove('invisible');
@@ -37,11 +35,43 @@ jQuery(document).ready(function ($) {
 
     });
     $(document).on('click', '.anmeldung', function () {
+        $(".anmeldung").removeClass("clicked");
+        $(this).toggleClass("clicked");
+        try{
+            map.remove();
+        }catch (err){
+
+        }
+        id_check = $(this).val();
+        map = new L.Map('mapid');
+        var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
+        var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
+
+        map.setView(new L.LatLng(jsonResponse.features[id_check].geometry.coordinates[1], jsonResponse.features[id_check].geometry.coordinates[0]), 20);
+        map.addLayer(osm);
+        var marker = L.marker([jsonResponse.features[id_check].geometry.coordinates[1], jsonResponse.features[id_check].geometry.coordinates[0]]).addTo(map);
+        document.getElementById("proof_data").classList.remove('invisible');
+    });
+    $("#back").click(function (event) {
+        try{
+            map.remove();
+        }catch (err){
+
+        }
+        document.getElementById("proof").classList.add('invisible');
+        document.getElementById("back").classList.add('invisible');
+        document.getElementById("check_button").classList.remove('invisible');
+        document.getElementById('inputAddress').value = '';
+        document.getElementById('proof').innerHTML = "";
+        document.getElementById("proof_data").classList.add('invisible');
+    });
+    $("#proof_data").click(function (event) {
         var formData = {
             name: name,
-            lat: jsonResponse.features[$(this).val()].geometry.coordinates[1],
-            lng: jsonResponse.features[$(this).val()].geometry.coordinates[0],
-            strasse: jsonResponse.features[0].properties.name,
+            lat: jsonResponse.features[id_check].geometry.coordinates[1],
+            lng: jsonResponse.features[id_check].geometry.coordinates[0],
+            strasse: jsonResponse.features[id_check].properties.name,
             cb_anzahl: cb_anzahl,
         };
         $.ajax({
@@ -52,23 +82,12 @@ jQuery(document).ready(function ($) {
             encode: true,
         }).done(function (data) {
             console.log(data);
+            if (data.success !== true){
+                window.alert("Fehler beim eintragen in die Datenbank.\nBitte seite neu laden!");
+            }else{
+                location.reload();
+            }
 
         });
-        map = new L.Map('mapid');
-        var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-        var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
-        var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
-
-        map.setView(new L.LatLng(jsonResponse.features[$(this).val()].geometry.coordinates[1], jsonResponse.features[$(this).val()].geometry.coordinates[0]), 20);
-        map.addLayer(osm);
-        var marker = L.marker([jsonResponse.features[$(this).val()].geometry.coordinates[1], jsonResponse.features[$(this).val()].geometry.coordinates[0]]).addTo(map);
-    });
-    $("#back").click(function (event) {
-        map.remove();
-        document.getElementById("proof").classList.add('invisible');
-        document.getElementById("back").classList.add('invisible');
-        document.getElementById("check_button").classList.remove('invisible');
-        document.getElementById('inputAddress').value = '';
-        document.getElementById('proof').innerHTML = ""
     });
 });
