@@ -1,3 +1,8 @@
 .clicked {
-    background-color: #ff0000;
+    background-color: red;
+    border: red;
+}
+.btn-primary:hover{
+    background-color: red !important;
+    border: red !important;
 }
