@@ -23,7 +23,7 @@ jQuery(document).ready(function ($) {
                     for (var i = 0; i < response.length; i++) {
                         var marker = L.marker([response[i].lat, response[i].lng]).addTo(map);
                         marker.bindPopup("<b>Name: " + response[i].name + "</b><br><p>Anzahl: " + response[i].cb_anzahl + "</p>");
-                        list = list + "<tr><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].cb_anzahl + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button></td></tr>";
+                        list = list + "<tr><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].cb_anzahl + "</td><td>" + response[i].geld + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button></td></tr>";
                     }
                     document.getElementById('table_overview').innerHTML = list;
                 }

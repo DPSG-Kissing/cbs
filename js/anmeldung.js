@@ -72,6 +72,7 @@ jQuery(document).ready(function ($) {
             lat: jsonResponse.features[id_check].geometry.coordinates[1],
             lng: jsonResponse.features[id_check].geometry.coordinates[0],
             strasse: jsonResponse.features[id_check].properties.name,
+            money: $("#inputMoney").val(),
             cb_anzahl: $("#cb_anzahl").val(),
         };
         $.ajax({

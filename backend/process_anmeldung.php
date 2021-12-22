@@ -10,14 +10,15 @@ if ($conn->connect_error) {
 }
 mysqli_set_charset($conn, "utf8");
 
-$sql = $conn->prepare("INSERT INTO anmeldungen (name, strasse, lat, lng, cb_anzahl) VALUES (?,?,?,?,?);");
-$sql->bind_param("ssddi", $name, $strasse, $lat, $lng, $cb_anzahl);
+$sql = $conn->prepare("INSERT INTO anmeldungen (name, strasse, lat, lng, cb_anzahl, geld) VALUES (?,?,?,?,?,?)");
+$sql->bind_param("ssddid", $name, $strasse, $lat, $lng, $cb_anzahl, $money);
 
 $name = $_POST['name'];
 $strasse = $_POST['strasse'];
 $lat = $_POST['lat'];
 $lng = $_POST['lng'];
 $cb_anzahl = $_POST['cb_anzahl'];
+$money = $_POST['money'];
 
 $sql->execute();
 $sql->close();
@@ -37,6 +38,10 @@ if (empty($_POST['strasse'])) {
 
 if (empty($_POST['cb_anzahl'])) {
     $errors['cb_anzahl'] = 'Anzahl Bäume is required.';
+}
+
+if (empty($_POST['money'])) {
+    $errors['money'] = 'Bezahltes Geld is required.';
 }
 
 if (!empty($errors)) {
