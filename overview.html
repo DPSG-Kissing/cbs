@@ -21,8 +21,9 @@
             integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
             crossorigin=""></script>
     <link rel='icon' href='img/favicon.ico' type='image/x-icon' sizes="32x32"/>
-    <script src="js/anmeldung.js"></script>
     <script src="js/auth.js"></script>
+    <script src="js/overview.js"></script>
+
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -32,8 +33,8 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
-            <a class="nav-item nav-link active" href="index.html">Home <span class="sr-only">(current)</span></a>
-            <a class="nav-item nav-link" href="overview.html">Übersicht</a>
+            <a class="nav-item nav-link active" href="index.html">Home</a>
+            <a class="nav-item nav-link" href="overview.html">Übersicht<span class="sr-only">(current)</span></a>
         </div>
     </div>
 </nav>
@@ -47,7 +48,8 @@
                 <form id="login">
                     <div class="form-group">
                         <i class="fa fa-lock"></i>
-                        <input id="password" type="password" class="form-control" placeholder="Password" required="required">
+                        <input id="password" type="password" class="form-control" placeholder="Password"
+                               required="required">
                     </div>
                     <div class="form-group">
                         <input type="submit" class="btn btn-primary btn-block btn-lg" value="Login">
@@ -59,41 +61,28 @@
 </div>
 <div class="container">
     <div class="row d-flex align-content-center flex-wrap">
-        <div class="col">
-            <form id="check">
-                <div class="form-row">
-                    <div class="form-group col-md-8">
-                        <label for="name">Name</label>
-                        <input type="text" class="form-control" id="name" placeholder="Mustermann" required>
-                    </div>
-                    <div class="form-group col-md-4">
-                        <label for="cb_anzahl">Anzahl Bäume</label>
-                        <select id="cb_anzahl" class="form-control">
-                            <option selected>1</option>
-                            <option>2</option>
-                            <option>3</option>
-                            <option>4</option>
-                            <option>5</option>
-                        </select>
-                    </div>
+            <div class="col">
+                <div id="overview_map" style="height: 800px !important;">
                 </div>
-                <div class="form-group">
-                    <label for="inputAddress">Adresse</label>
-                    <input type="text" class="form-control" id="inputAddress" placeholder="Hauptstraße 1" required>
-                </div>
-                <button type="submit" id="check_button" class="btn btn-primary">Überprüfen</button>
-            </form>
-            <div id="proof" class="invisible">
             </div>
-            <button id="back" class="btn btn-primary invisible">Keines Davon</button>
-            <div class="row justify-content-center">
-                <div class="col text-center">
-                <button id="proof_data" class="btn btn-primary invisible">Bestätigen</button></div>
-            </div>
-            <div id="mapid" style="height: 450px !important;">
+    </div>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col">Nr.</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Strasse</th>
+                        <th scope="col">Anzahl</th>
+                        <th scope="col">Aktion</th>
+                    </tr>
+                    </thead>
+                    <tbody id="table_overview">
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 </div>
 
 <!-- Optional JavaScript -->
