@@ -1,16 +1,34 @@
 jQuery(document).ready(function ($) {
     checkCookie();
     make_map();
+
+
     function make_map() {
         var map = new L.Map('overview_map');
         var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
         var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
 
-        map.setView(new L.LatLng(48.303808, 10.974612), 14);
+        map.setView(new L.LatLng(48.303808, 10.974612), 15);
         map.addLayer(osm);
         var request = new XMLHttpRequest();
         var url = "../backend/get_data.php";
+        var greenIcon = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+        var redIcon = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
 
         var list = "";
 
@@ -21,9 +39,17 @@ jQuery(document).ready(function ($) {
                 if (request.status === 200) {
                     var response = JSON.parse(request.response);
                     for (var i = 0; i < response.length; i++) {
-                        var marker = L.marker([response[i].lat, response[i].lng]).addTo(map);
-                        marker.bindPopup("<b>Name: " + response[i].name + "</b><br><p>Anzahl: " + response[i].cb_anzahl + "</p>");
-                        list = list + "<tr><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].cb_anzahl + "</td><td>" + response[i].geld + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button></td></tr>";
+                        let color=""
+                        if(response[i].status == 0){
+                            color = "table-danger";
+                            var marker = L.marker([response[i].lat, response[i].lng], {icon: redIcon}).addTo(map);
+                        }else{
+                            color = "table-success";
+                            var marker = L.marker([response[i].lat, response[i].lng], {icon: greenIcon}).addTo(map);
+                        }
+
+                        marker.bindPopup("<b>Name: " + response[i].name + "</b><br><p>Anzahl: " + response[i].cb_anzahl + "</p></br><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button>");
+                        list = list + "<tr class='" + color + "'><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].cb_anzahl + "</td><td>" + Number.parseFloat(response[i].geld).toFixed(2) + "\u20AC" + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button></td></tr>";
                     }
                     document.getElementById('table_overview').innerHTML = list;
                 }
@@ -53,5 +79,28 @@ jQuery(document).ready(function ($) {
             });
         } else {
         }
+    });
+
+    $(document).on('click', '.table_status_abgeholt', function () {
+            let status = 0
+            if($(this).data("status")===0){status = 1}else{status = 0};
+            var formData = {
+                id: $(this).val(),
+                status: status,
+            };
+            $.ajax({
+                type: "POST",
+                url: "backend/change.php",
+                data: formData,
+                dataType: "json",
+                encode: true,
+            }).done(function (data) {
+                console.log(data);
+                if (data.success !== true){
+                    window.alert("Fehler beim updaten der Datenbank.\nBitte seite neu laden!");
+                }else{
+                    location.reload();
+                }
+            });
     });
 });

@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by IntelliJ IDEA.
- * User: Luca
- * Date: 16.05.2019
- * Time: 19:37
- */
 $servername = "db5006048456.hosting-data.io";
 $username = "dbu1208048";
 $password = "!xk?5Q4ry$!dL9Qk";
@@ -16,13 +10,20 @@ if ($conn->connect_error) {
 }
 mysqli_set_charset($conn, "utf8");
 
-$sql = "SELECT * FROM anmeldungen ORDER BY strasse ASC";
+$sql = $conn->prepare("UPDATE anmeldungen SET status=? WHERE id=?");
+$sql->bind_param("ii", $status, $id);
 
-$query = mysqli_query($conn,$sql);
+$id = $_POST['id'];
+$status = $_POST['status'];
 
-while($row = $query->fetch_assoc()){
-    $output[]=$row;
-}
+$sql->execute();
+$sql->close();
 $conn->close();
+
 // Json Output
-echo json_encode($output,JSON_UNESCAPED_UNICODE);
+$data = [];
+
+    $data['success'] = true;
+    $data['message'] = 'Success!';
+
+echo json_encode($data);
