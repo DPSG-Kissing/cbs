@@ -1,10 +1,13 @@
 jQuery(document).ready(function ($) {
+    let map;
+    let standort;
+    let standort_circle;
     checkCookie();
     make_map();
 
 
     function make_map() {
-        var map = new L.Map('overview_map');
+        map = new L.Map('overview_map');
         var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
         var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
@@ -14,7 +17,7 @@ jQuery(document).ready(function ($) {
         var request = new XMLHttpRequest();
         var url = "../backend/get_data.php";
         var greenIcon = new L.Icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
             iconSize: [25, 41],
             iconAnchor: [12, 41],
@@ -56,6 +59,32 @@ jQuery(document).ready(function ($) {
             }
         };
         request.send();
+    }
+    $("#refresh_pos").click(function (event) {
+        map.locate({setView: true, maxZoom: 10});
+        map.on('locationfound', onLocationFound);
+        map.on('locationerror', onLocationError);
+    });
+
+    function onLocationFound(e) {
+        var radius = e.accuracy;
+
+        try{
+            map.removeLayer(standort);
+            map.removeLayer(standort_circle);
+        }catch(err){
+
+        }
+
+        standort = new L.marker(e.latlng);
+        standort_circle = new L.circle(e.latlng, radius);
+
+        map.addLayer(standort);
+        map.addLayer(standort_circle);
+    }
+
+    function onLocationError(e) {
+        alert(e.message);
     }
 
     $(document).on('click', '.table_del', function () {
