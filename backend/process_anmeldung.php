@@ -10,11 +10,12 @@ if ($conn->connect_error) {
 }
 mysqli_set_charset($conn, "utf8");
 
-$sql = $conn->prepare("INSERT INTO anmeldungen (name, strasse, lat, lng, cb_anzahl, geld) VALUES (?,?,?,?,?,?)");
-$sql->bind_param("ssddid", $name, $strasse, $lat, $lng, $cb_anzahl, $money);
+$sql = $conn->prepare("INSERT INTO anmeldungen (name, strasse, telefonnummer, lat, lng, cb_anzahl, geld) VALUES (?,?,?,?,?,?,?)");
+$sql->bind_param("sssddid", $name, $strasse, $telefonnummer, $lat, $lng, $cb_anzahl, $money);
 
 $name = $_POST['name'];
 $strasse = $_POST['strasse'];
+$telefonnummer = $_POST['telefonnummer'];
 $lat = $_POST['lat'];
 $lng = $_POST['lng'];
 $cb_anzahl = $_POST['cb_anzahl'];
@@ -34,6 +35,10 @@ if (empty($_POST['name'])) {
 
 if (empty($_POST['strasse'])) {
     $errors['strass'] = 'Strasse is required.';
+}
+
+if (empty($_POST['telefonnummer'])) {
+    $errors['telefonnummer'] = 'Telefonnummer is required.';
 }
 
 if (empty($_POST['cb_anzahl'])) {

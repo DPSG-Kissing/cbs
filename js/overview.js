@@ -51,8 +51,8 @@ jQuery(document).ready(function ($) {
                             var marker = L.marker([response[i].lat, response[i].lng], {icon: greenIcon}).addTo(map);
                         }
 
-                        marker.bindPopup("<b>Name: " + response[i].name + "</b><br><p>Anzahl: " + response[i].cb_anzahl + "</p></br><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button>");
-                        list = list + "<tr class='" + color + "'><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].cb_anzahl + "</td><td>" + Number.parseFloat(response[i].geld).toFixed(2) + "\u20AC" + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button></td></tr>";
+                        marker.bindPopup("<b>Name: " + response[i].name + "</b><br>Tel: " + response[i].telefonnummer + "<br><p>Anzahl: " + response[i].cb_anzahl + "</p><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button>");
+                        list = list + "<tr class='" + color + "'><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].telefonnummer + "</td><td>" + response[i].cb_anzahl + "</td><td>" + Number.parseFloat(response[i].geld).toFixed(2) + "\u20AC" + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button></td></tr>";
                     }
                     document.getElementById('table_overview').innerHTML = list;
                 }
