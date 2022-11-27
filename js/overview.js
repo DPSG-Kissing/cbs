@@ -34,6 +34,8 @@ jQuery(document).ready(function ($) {
         });
 
         var list = "";
+        var summe = 0;
+        var anzahl_gesamt = 0;
 
         request.open('POST', url, true);
         request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -53,7 +55,10 @@ jQuery(document).ready(function ($) {
 
                         marker.bindPopup("<b>Name: " + response[i].name + "</b><br>Tel: " + response[i].telefonnummer + "<br><p>Anzahl: " + response[i].cb_anzahl + "</p><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button>");
                         list = list + "<tr class='" + color + "'><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].telefonnummer + "</td><td>" + response[i].cb_anzahl + "</td><td>" + Number.parseFloat(response[i].geld).toFixed(2) + "\u20AC" + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button></td></tr>";
+                        summe = summe + Number.parseFloat(response[i].geld).toFixed(2);
+                        anzahl_gesamt = anzahl_gesamt + response[i].cb_anzahl;
                     }
+                    list = list + "<tr class='table-success'><th scope='row'></th><td>Summe</td><td></td><td></td><td>" + anzahl_gesamt + "</td><td>" + summe.toFixed(2) + "\u20AC" + "</td><td></td></tr>";
                     document.getElementById('table_overview').innerHTML = list;
                 }
             }
