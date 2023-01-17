@@ -4,15 +4,41 @@ jQuery(document).ready(function ($) {
     let standort_circle;
     checkCookie();
     make_map();
+    filterName();
+    filterRows();
 
 
     function make_map() {
         map = new L.Map('overview_map');
+        var markers = L.markerClusterGroup(
+            {
+            maxClusterRadius: 2,
+            zoomToBoundsOnClick: true,
+            iconCreateFunction: function(cluster) {
+            var childCount = cluster.getChildCount();
+            var c = ' marker-cluster-';
+            if (childCount < 10) {
+                c += 'small';
+            } else if (childCount < 100) {
+                c += 'medium';
+            } else {
+                c += 'large';
+            }
+    
+            return new L.DivIcon({
+                html: '<div><span>' + childCount + '</span></div>',
+                className: 'marker-cluster' + c,
+                iconSize: new L.Point(40, 40)
+            });
+        }});
         var osmUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         var osmAttrib = 'Map data © <a href="https://openstreetmap.org">OpenStreetMap</a> contributors';
         var osm = new L.TileLayer(osmUrl, {attribution: osmAttrib});
-
-        map.setView(new L.LatLng(48.303808, 10.974612), 15);
+        if("lat" in sessionStorage){
+            map.setView(new L.LatLng(sessionStorage.getItem("lat"), sessionStorage.getItem("lng")), sessionStorage.getItem("zoom"));
+        } else {
+            map.setView(new L.LatLng(48.303808, 10.974612), 15);
+        }
         map.addLayer(osm);
         var request = new XMLHttpRequest();
         var url = "../backend/get_data.php";
@@ -47,14 +73,17 @@ jQuery(document).ready(function ($) {
                         let color=""
                         if(response[i].status == 0){
                             color = "table-danger";
+                            style= "";
                             var marker = L.marker([response[i].lat, response[i].lng], {icon: redIcon}).addTo(map);
                         }else{
                             color = "table-success";
+                            style = "display: none;";
                             var marker = L.marker([response[i].lat, response[i].lng], {icon: greenIcon}).addTo(map);
                         }
 
-                        marker.bindPopup("<b>Name: " + response[i].name + "</b><br>Tel: " + response[i].telefonnummer + "<br><p>Anzahl: " + response[i].cb_anzahl + "</p><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button>");
-                        list = list + "<tr class='" + color + "'><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].telefonnummer + "</td><td>" + response[i].cb_anzahl + "</td><td>" + Number.parseFloat(response[i].geld).toFixed(2) + "\u20AC" + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button></td></tr>";
+                        marker.bindPopup("<b>Name: " + response[i].name + "</b><br>Tel: " + response[i].telefonnummer + "<br>Straße: " + response[i].strasse + "<br><p>Anzahl: " + response[i].cb_anzahl + "</p><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt mr-2'><span class='fa-solid fa-check' aria-hidden='true'></span></button><a href='#" + i + "' class='btn btn-warning'><span class='fa-solid fa-arrow-down' aria-hidden='true'></span></a>");
+                        markers.addLayer(marker);
+                        list = list + "<tr id='" + i + "' class='" + color + "' style='" + style + "'><th scope='row'>" + (i+1) + "</th><td>" + response[i].name + "</td><td>" + response[i].strasse + "</td><td>" + response[i].telefonnummer + "</td><td>" + response[i].cb_anzahl + "</td><td>" + Number.parseFloat(response[i].geld).toFixed(2) + "\u20AC" + "</td><td><button value='" + response[i].id + "' class='btn btn-danger table_del'>Löschen</button><button value='" + response[i].id + "' data-status='" + response[i].status + "' class='btn btn-success table_status_abgeholt'>Abgeholt</button></td></tr>";
                         summe += parseFloat(response[i].geld);
                         anzahl_gesamt += parseInt(response[i].cb_anzahl);
                     }
@@ -63,6 +92,7 @@ jQuery(document).ready(function ($) {
                 }
             }
         };
+        map.addLayer(markers);
         request.send();
     }
     $("#refresh_pos").click(function (event) {
@@ -108,6 +138,12 @@ jQuery(document).ready(function ($) {
                 if (data.success !== true){
                     window.alert("Fehler beim löschen aus der Datenbank.\nBitte seite neu laden!");
                 }else{
+                    var lat = map.getCenter().lat;
+                    var lng = map.getCenter().lng;
+                    var zoom = map.getZoom();
+                    sessionStorage.setItem("lat", lat);
+                    sessionStorage.setItem("lng", lng);
+                    sessionStorage.setItem("zoom", zoom);
                     location.reload();
                 }
             });
@@ -133,8 +169,32 @@ jQuery(document).ready(function ($) {
                 if (data.success !== true){
                     window.alert("Fehler beim updaten der Datenbank.\nBitte seite neu laden!");
                 }else{
+                    var lat = map.getCenter().lat;
+                    var lng = map.getCenter().lng;
+                    var zoom = map.getZoom();
+                    sessionStorage.setItem("lat", lat);
+                    sessionStorage.setItem("lng", lng);
+                    sessionStorage.setItem("zoom", zoom);
                     location.reload();
                 }
             });
     });
+
+    function filterRows() {
+        $("#filter-button").click(function() {
+            $("#table_overview tr").filter(function() {
+                return $(this).hasClass("table-success");
+            }).toggle();
+        });
+    }
+
+    function filterName(){
+        $("#filter-input").keyup(function() {
+            var filter = $(this).val();
+            $("#table_overview tr").filter(function() {
+                $(this).toggle($(this).text().toLowerCase().indexOf(filter) > -1);
+            });
+        });
+        
+    }
 });
