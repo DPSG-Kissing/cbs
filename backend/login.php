@@ -1,19 +1,22 @@
 <?php
-$errors = [];
-$data = [];
+header("Content-Type: application/json");
 
-$password=$_POST['password_hash'];
+// Das korrekt gehashte Passwort (SHA-256)
+$correctHash = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3";
 
-if ($password != "b0c5f417a5a9c8af7e19cfb341d9fad0869baa9d473652fcba4ae5a872db6b30") {
-    $errors['password_hash'] = "Password Hash is false";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Passwort-Hash aus der Anfrage lesen
+    $inputHash = $_POST['password_hash'] ?? '';
+
+    // Überprüfen, ob der Hash korrekt ist
+    if ($inputHash === $correctHash) {
+        echo json_encode(["success" => true]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Falsches Passwort."]);
+    }
+    exit;
 }
 
-if (!empty($errors)) {
-    $data['success'] = false;
-    $data['errors'] = $errors;
-} else {
-    $data['success'] = true;
-    $data['message'] = 'Success!';
-}
-
-echo json_encode($data);
+// Fallback bei ungültigen Anfragen
+http_response_code(400);
+echo json_encode(["success" => false, "message" => "Ungültige Anfrage."]);

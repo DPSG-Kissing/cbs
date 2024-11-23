@@ -1,60 +1,37 @@
 <?php
-$servername = "db5006048456.hosting-data.io";
-$username = "dbu1208048";
-$password = "!xk?5Q4ry$!dL9Qk";
-$dbname = "dbs5065641";
+include("mysql_con.php");
 
-$conn = new mysqli($servername, $username, $password, $dbname);
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-mysqli_set_charset($conn, "utf8");
+// JSON-Daten von der Anfrage dekodieren
+$data = json_decode(file_get_contents("php://input"), true);
 
 $sql = $conn->prepare("INSERT INTO anmeldungen (name, strasse, telefonnummer, lat, lng, cb_anzahl, geld) VALUES (?,?,?,?,?,?,?)");
 $sql->bind_param("sssddid", $name, $strasse, $telefonnummer, $lat, $lng, $cb_anzahl, $money);
 
-$name = $_POST['name'];
-$strasse = $_POST['strasse'];
-$telefonnummer = $_POST['telefonnummer'];
-$lat = $_POST['lat'];
-$lng = $_POST['lng'];
-$cb_anzahl = $_POST['cb_anzahl'];
-$money = $_POST['money'];
+$name = $data['name'];
+$strasse = $data['strasse'];
+$telefonnummer = $data['telefonnummer'];
+$lat = $data['lat'];
+$lng = $data['lng'];
+$cb_anzahl = $data['cb_anzahl'];
+$money = $data['money'];
 
 $sql->execute();
 $sql->close();
 $conn->close();
 
-// Json Output
+// Antwort erstellen
 $errors = [];
-$data = [];
+$response = ["success" => true, "message" => "Success!"];
 
-if (empty($_POST['name'])) {
-    $errors['name'] = 'Name is required.';
-}
-
-if (empty($_POST['strasse'])) {
-    $errors['strass'] = 'Strasse is required.';
-}
-
-if (empty($_POST['telefonnummer'])) {
-    $errors['telefonnummer'] = 'Telefonnummer is required.';
-}
-
-if (empty($_POST['cb_anzahl'])) {
-    $errors['cb_anzahl'] = 'Anzahl Bäume is required.';
-}
-
-if (empty($_POST['money'])) {
-    $errors['money'] = 'Bezahltes Geld is required.';
-}
+if (empty($data['name'])) $errors['name'] = 'Name is required.';
+if (empty($data['strasse'])) $errors['strasse'] = 'Strasse is required.';
+if (empty($data['telefonnummer'])) $errors['telefonnummer'] = 'Telefonnummer is required.';
+if (empty($data['cb_anzahl'])) $errors['cb_anzahl'] = 'Anzahl Bäume is required.';
+if (empty($data['money'])) $errors['money'] = 'Bezahltes Geld is required.';
 
 if (!empty($errors)) {
-    $data['success'] = false;
-    $data['errors'] = $errors;
-} else {
-    $data['success'] = true;
-    $data['message'] = 'Success!';
+    $response['success'] = false;
+    $response['errors'] = $errors;
 }
 
-echo json_encode($data);
+echo json_encode($response);

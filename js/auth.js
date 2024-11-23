@@ -1,85 +1,88 @@
-function hash(string) {
+// Hashing-Funktion für das Passwort (SHA-256)
+async function hash(string) {
     const utf8 = new TextEncoder().encode(string);
-    return crypto.subtle.digest('SHA-256', utf8).then((hashBuffer) => {
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        const hashHex = hashArray
-            .map((bytes) => bytes.toString(16).padStart(2, '0'))
-            .join('');
-        return hashHex;
-    });
+    const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function getCookie(cname) {
-    let name = cname + "=";
-    let decodedCookie = decodeURIComponent(document.cookie);
-    let ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-        let c = ca[i];
-        while (c.charAt(0) == ' ') {
-            c = c.substring(1);
-        }
-        if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
+// Cookie-Management
+function setCookie(name, value, days) {
+    const d = new Date();
+    d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+    document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+}
+
+function getCookie(name) {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const c = cookies[i].trim();
+        if (c.startsWith(`${name}=`)) {
+            return c.substring(name.length + 1);
         }
     }
-    return "";
+    return null;
 }
 
-function setCookie(cname, cvalue, exdays) {
-    const d = new Date();
-    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
-    let expires = "expires=" + d.toUTCString();
-    document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+// Prüft, ob der Benutzer bereits eingeloggt ist
+async function checkPassword() {
+    const storedHash = getCookie("password_hash");
+    if (!storedHash) {
+        showLoginModal();
+        return;
+    }
+
+    // Prüfe den gespeicherten Hash beim Server
+    const isValid = await validatePasswordHash(storedHash);
+    if (!isValid) {
+        showLoginModal();
+    } else {
+        console.log("Bereits eingeloggt.");
+    }
 }
 
+// Zeigt das Login-Popup an
+function showLoginModal() {
+    const modal = new bootstrap.Modal(document.getElementById("myModal"), {
+        backdrop: 'static',
+        keyboard: false,
+    });
+    modal.show();
 
-function checkCookie() {
-    let user_pwhash = getCookie("hash");
-    var formData = {
-        password_hash: user_pwhash,
-    };
-    $.ajax({
-        type: "POST",
-        url: "backend/login.php",
-        data: formData,
-        dataType: "json",
-        encode: true,
-    }).done(function (data) {
-        if (data.success !== true) {
-            $('#myModal').modal({
-                keyboard: false,
-                backdrop: 'static'
-            })
-            $("#myModal").modal('toggle');
+    document.getElementById("login").addEventListener("submit", async function(event) {
+        event.preventDefault(); // Verhindert Standard-Submit
+
+        const password = document.getElementById("password").value;
+        const passwordHash = await hash(password);
+
+        const isValid = await validatePasswordHash(passwordHash);
+        if (isValid) {
+            setCookie("password_hash", passwordHash, 1); // Speichert Hash als Cookie
+            modal.hide();
         } else {
-
+            alert("Falsches Passwort. Bitte versuche es erneut.");
         }
     });
 }
 
-jQuery(document).ready(function ($) {
-    $("#login").submit(function (event) {
-        event.preventDefault();
-        hash($("#password").val()).then(function (pw_hash) {
-                var formData = {
-                    password_hash: pw_hash,
-                };
-                $.ajax({
-                    type: "POST",
-                    url: "backend/login.php",
-                    data: formData,
-                    dataType: "json",
-                    encode: true,
-                }).done(function (data) {
-                    if (data.success !== true) {
-                        window.alert("Fehler, falsches Passwort!");
-                    } else {
-                        setCookie("hash", pw_hash, 1);
-                        $("#myModal").modal('toggle');
-                    }
+// Validiert den Passwort-Hash beim Server
+async function validatePasswordHash(hash) {
+    try {
+        const response = await fetch("backend/login.php", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: `password_hash=${encodeURIComponent(hash)}`,
+        });
 
-                });
-            }
-        );
-    });
-});
+        const result = await response.json();
+        return result.success;
+    } catch (error) {
+        console.error("Fehler bei der Anfrage:", error);
+        return false;
+    }
+}
+
+// Starte die Passwortprüfung beim Laden der Seite
+document.addEventListener("DOMContentLoaded", checkPassword);
