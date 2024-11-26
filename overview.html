@@ -1,126 +1,85 @@
 <!doctype html>
 <html lang="de">
+
 <head>
-    <!-- Required meta tags -->
+    <!-- Meta-Tags -->
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+    <!-- MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" crossorigin="anonymous">
+    <!-- Custom Styles -->
     <link rel="stylesheet" href="css.css">
-    <link rel="apple-touch-icon" sizes="57x57" href="images/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="images/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="images/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="images/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="images/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="images/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="images/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="images/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-icon-180x180.png">
-    <link rel="icon" type="image/png" sizes="192x192"  href="images/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
-
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.3.0/jquery.form.min.js"
-            integrity="sha384-qlmct0AOBiA2VPZkMY3+2WqkHtIQ9lSdAsAn5RUJD/3vA5MKDgSGcdmIv4ycVxyn"
-            crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
-          integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
-            integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
-            crossorigin=""></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js" integrity="sha512-OFs3W4DIZ5ZkrDhBFtsCP6JXtMEDGmhl0QPlmWYBJay40TT1n3gt2Xuw8Pf/iezgW9CdabjkNChRqozl/YADmg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.css" integrity="sha512-mQ77VzAakzdpWdgfL/lM1ksNy89uFgibRQANsNneSTMD/bj0Y/8+94XMwYhnbzx8eki2hrbPpDm0vD0CiT2lcg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel='icon' href='img/favicon.ico' type='image/x-icon' sizes="32x32"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <script src="js/auth.js"></script>
-    <script src="js/overview.js"></script>
-
+    <!-- Favicon -->
+    <link rel="icon" href="images/favicon-32x32.png" type="image/png">
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="index.html">CBS Tool</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-        <div class="navbar-nav">
-            <a class="nav-item nav-link active" href="index.html">Home</a>
-            <a class="nav-item nav-link" href="overview.html">Übersicht<span class="sr-only">(current)</span></a>
-        </div>
-    </div>
-</nav>
-<button class='btn btn-success' id="refresh_pos">Standort</button>
-<div id="myModal" class="modal fade">
-    <div class="modal-dialog modal-login">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h4 class="modal-title">Login</h4>
-            </div>
-            <div class="modal-body">
-                <form id="login">
-                    <div class="form-group">
-                        <i class="fa fa-lock"></i>
-                        <input id="password" type="password" class="form-control" placeholder="Password"
-                               required="required">
-                    </div>
-                    <div class="form-group">
-                        <input type="submit" class="btn btn-primary btn-block btn-lg" value="Login">
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="container">
-    <div class="row d-flex align-content-center flex-wrap">
-            <div class="col">
-                <div id="overview_map" style="height: 800px !important;">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">CBS Tool</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <a class="nav-item nav-link active" href="index.html">Home</a>
+                    <a class="nav-item nav-link" href="overview.html">Übersicht</a>
                 </div>
             </div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <button class="btn btn-warning" id="filter-button">Abgeholte einblenden / ausblenden</button>
         </div>
-        <div class="col">
-            <input class="form-control" type="text" id="filter-input" placeholder="Suchbegriff">
-        </div>
-        </div>
+    </nav>
+    <!-- Container für Inhalt -->
+    <div class="container mt-4">
+        <!-- Erste Zeile mit Button -->
         <div class="row">
+            <div class="col-12">
+                <button id="toggle-location" class="btn btn-primary w-100">Standort umschalten</button>
+            </div>
+        </div>
+        <!-- Zweite Zeile mit Karte -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div id="overview_map" style="height: 800px;"></div>
+            </div>
+        </div>
+        <!-- Dritte Zeile mit Filter und Suchleiste -->
+        <div class="row mt-3">
+            <div class="col-md-6">
+                <button class="btn btn-warning w-100" id="filter-button">Abgeholte einblenden / ausblenden</button>
+            </div>
+            <div class="col-md-6">
+                <input class="form-control" type="text" id="filter-input" placeholder="Suchbegriff">
+            </div>
+        </div>
+        <!-- Vierte Zeile mit Tabelle -->
+        <div class="row mt-4">
             <div class="col">
                 <table class="table table-hover">
                     <thead>
-                    <tr>
-                        <th scope="col">Nr.</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Strasse</th>
-                        <th scope="col">Telefonnummer</th>
-                        <th scope="col">Anzahl</th>
-                        <th scope="col">Bezahlt</th>
-                        <th scope="col">Aktion</th>
-                    </tr>
+                        <tr>
+                            <th scope="col">Nr.</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Strasse</th>
+                            <th scope="col">Telefonnummer</th>
+                            <th scope="col">Anzahl</th>
+                            <th scope="col">Bezahlt</th>
+                            <th scope="col">Aktion</th>
+                        </tr>
                     </thead>
-                    <tbody id="table_overview">
-                    </tbody>
+                    <tbody id="table_overview"></tbody>
                 </table>
             </div>
         </div>
-</div>
-
-<!-- Optional JavaScript -->
-<!-- jQuery first, then Popper.js, then Bootstrap JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
-        crossorigin="anonymous"></script>
+    </div>
+    <!-- Scripts -->
+    <script src="js/overview.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" crossorigin="anonymous"></script>
 </body>
+
 </html>

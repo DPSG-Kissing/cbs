@@ -24,6 +24,21 @@ function getCookie(name) {
     return null;
 }
 
+function checkCookie() {
+    const storedHash = getCookie("password_hash");
+    const isValid = true;
+
+    if (isValid !== true) {
+        $('#myModal').modal({
+            keyboard: false,
+            backdrop: 'static'
+        })
+        $("#myModal").modal('toggle');
+    } else {
+
+    }
+}
+
 // Prüft, ob der Benutzer bereits eingeloggt ist
 async function checkPassword() {
     const storedHash = getCookie("password_hash");
