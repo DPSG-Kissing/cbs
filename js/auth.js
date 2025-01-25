@@ -6,11 +6,13 @@ async function hash(string) {
     return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Cookie-Management
 function setCookie(name, value, days) {
     const d = new Date();
     d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+    const expires = `expires=${d.toUTCString()}`;
+    const sameSite = "SameSite=None"; // Für Drittanbieter-Kontexte
+    const secure = "Secure"; // Nur über HTTPS senden
+    document.cookie = `${name}=${value}; ${expires}; path=/; ${sameSite}; ${secure}`;
 }
 
 function getCookie(name) {
@@ -22,21 +24,6 @@ function getCookie(name) {
         }
     }
     return null;
-}
-
-function checkCookie() {
-    const storedHash = getCookie("password_hash");
-    const isValid = true;
-
-    if (isValid !== true) {
-        $('#myModal').modal({
-            keyboard: false,
-            backdrop: 'static'
-        })
-        $("#myModal").modal('toggle');
-    } else {
-
-    }
 }
 
 // Prüft, ob der Benutzer bereits eingeloggt ist
@@ -58,27 +45,40 @@ async function checkPassword() {
 
 // Zeigt das Login-Popup an
 function showLoginModal() {
-    const modal = new bootstrap.Modal(document.getElementById("myModal"), {
+    const modalElement = document.getElementById("myModal");
+    if (!modalElement) {
+        console.error("Modal-Element nicht gefunden!");
+        return;
+    }
+
+    const modal = new bootstrap.Modal(modalElement, {
         backdrop: 'static',
         keyboard: false,
     });
+
     modal.show();
 
-    document.getElementById("login").addEventListener("submit", async function(event) {
-        event.preventDefault(); // Verhindert Standard-Submit
+    const loginForm = document.getElementById("login");
+    if (loginForm) {
+        loginForm.addEventListener("submit", async function(event) {
+            event.preventDefault(); // Verhindert Standard-Submit
 
-        const password = document.getElementById("password").value;
-        const passwordHash = await hash(password);
+            const password = document.getElementById("password").value;
+            const passwordHash = await hash(password);
 
-        const isValid = await validatePasswordHash(passwordHash);
-        if (isValid) {
-            setCookie("password_hash", passwordHash, 1); // Speichert Hash als Cookie
-            modal.hide();
-        } else {
-            alert("Falsches Passwort. Bitte versuche es erneut.");
-        }
-    });
+            const isValid = await validatePasswordHash(passwordHash);
+            if (isValid) {
+                setCookie("password_hash", passwordHash, 1); // Speichert Hash als Cookie
+                modal.hide(); // Schließt das Modal
+            } else {
+                alert("Falsches Passwort. Bitte versuche es erneut.");
+            }
+        });
+    } else {
+        console.error("Login-Formular nicht gefunden!");
+    }
 }
+
 
 // Validiert den Passwort-Hash beim Server
 async function validatePasswordHash(hash) {
