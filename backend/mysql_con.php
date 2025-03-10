@@ -1,7 +1,7 @@
 <?php
-$servername = "sql180.your-server.de"; //Servername
+$servername = "127.0.0.1"; //Servername
 $username = "cbsammlung"; //Benutzername
-$password = "kzZzwkEuzWLT35cz"; //Passwort
+$password = "Ca0WGf7gnjtF4TuAP6yz"; //Passwort
 $dbname = "cbsammlung"; //Datenbankname
 
 // Erstelle eine Verbindung
