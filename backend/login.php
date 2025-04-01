@@ -2,7 +2,7 @@
 header("Content-Type: application/json");
 
 // Das korrekt gehashte Passwort (SHA-256)
-$correctHash = "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3";
+$correctHash = "9db623f8b84efb6cd12fca05c34f1cb26f7e0ac6477c757d80ed4f30d1707697";
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Passwort-Hash aus der Anfrage lesen
