@@ -165,19 +165,16 @@
                             <i class="bi bi-tree me-1" aria-hidden="true"></i>
                             Anzahl Bäume <span class="text-danger" aria-label="Pflichtfeld">*</span>
                         </label>
-                        <select id="cb_anzahl" class="form-select" aria-describedby="treesHelp" required>
-                            <option value="1" selected>1</option>
-                            <option value="2">2</option>
-                            <option value="3">3</option>
-                            <option value="4">4</option>
-                            <option value="5">5</option>
-                            <option value="6">6</option>
-                            <option value="7">7</option>
-                            <option value="8">8</option>
-                            <option value="9">9</option>
-                            <option value="10">10</option>
-                        </select>
-                        <div id="treesHelp" class="form-text">Maximal 10 Bäume pro Anmeldung</div>
+                        <input type="number" class="form-control" id="cb_anzahl" 
+                               min="1" max="50" step="1" value="1"
+                               placeholder="z.B. 3"
+                               aria-describedby="treesHelp" required>
+                        <div id="treesHelp" class="form-text">
+                            Zwischen 1 und 50 Bäume möglich
+                        </div>
+                        <div class="invalid-feedback">
+                            Bitte geben Sie eine Anzahl zwischen 1 und 50 ein.
+                        </div>
                     </div>
                 </div>
             </fieldset>
