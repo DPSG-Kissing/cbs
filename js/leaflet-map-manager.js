@@ -1,7 +1,8 @@
 /**
  * CBS Leaflet Map Manager
  * Moderne Karten-Verwaltung für das Christbaum-Sammlung Tool
- * Version: 2.cbs-layer-modal-content {
+ *  * Version: 2.0.0
+ {
     background: white;
     border-radius: 8px;
     max-width: 500px;
