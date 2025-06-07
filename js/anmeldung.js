@@ -118,9 +118,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 element: document.getElementById("cb_anzahl"),
                 validate: (value) => {
                     const num = parseInt(value);
-                    return !isNaN(num) && num >= 1 && num <= 10;
+                    return !isNaN(num) && num >= 1 && num <= 50;
                 },
-                message: "Anzahl muss zwischen 1 und 10 liegen"
+                message: "Anzahl muss zwischen 1 und 50 liegen"
             }
         };
 
@@ -157,7 +157,32 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
 
-        // Geld: Nur Zahlen und Dezimalpunkt
+        // Anzahl Bäume: Nur positive Ganzzahlen
+        const treeCountInput = document.getElementById("cb_anzahl");
+        if (treeCountInput) {
+            treeCountInput.addEventListener("input", function() {
+                // Entferne alle nicht-numerischen Zeichen außer Ziffern
+                let value = this.value.replace(/[^\d]/g, '');
+                
+                // Stelle sicher, dass der Wert nicht mit 0 beginnt (außer es ist nur "0")
+                if (value.startsWith('0') && value.length > 1) {
+                    value = value.substring(1);
+                }
+                
+                // Begrenze auf Maximum 50
+                const numValue = parseInt(value);
+                if (numValue > 50) {
+                    value = "50";
+                }
+                
+                this.value = value;
+            });
+            
+            // Verhindere negative Werte beim Scrollen
+            treeCountInput.addEventListener("wheel", function(e) {
+                e.preventDefault();
+            });
+        }
         const moneyInput = document.getElementById("inputMoney");
         if (moneyInput) {
             moneyInput.addEventListener("input", function() {
@@ -639,8 +664,8 @@ document.addEventListener("DOMContentLoaded", function() {
         // Tree count validation
         const cbAnzahl = document.getElementById("cb_anzahl").value;
         const cbAnzahlValue = parseInt(cbAnzahl);
-        if (!cbAnzahl || isNaN(cbAnzahlValue) || cbAnzahlValue < 1 || cbAnzahlValue > 10) {
-            errors.push({ field: 'cb_anzahl', message: 'Anzahl Bäume muss zwischen 1 und 10 liegen' });
+        if (!cbAnzahl || isNaN(cbAnzahlValue) || cbAnzahlValue < 1 || cbAnzahlValue > 50) {
+            errors.push({ field: 'cb_anzahl', message: 'Anzahl Bäume muss zwischen 1 und 50 liegen' });
         }
 
         // Address validation
@@ -794,10 +819,11 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
 
-        // Reset select field
-        const cbAnzahlSelect = document.getElementById("cb_anzahl");
-        if (cbAnzahlSelect) {
-            cbAnzahlSelect.selectedIndex = 0;
+        // Reset select field -> Reset number field
+        const cbAnzahlInput = document.getElementById("cb_anzahl");
+        if (cbAnzahlInput) {
+            cbAnzahlInput.value = "1"; // Reset to default value
+            clearFieldError(cbAnzahlInput);
         }
 
         // Clear UI state
@@ -981,7 +1007,12 @@ document.addEventListener("DOMContentLoaded", function() {
             if (confirm('Es wurde ein nicht gesendetes Formular gefunden. Möchten Sie es wiederherstellen?')) {
                 if (draft.name) document.getElementById("name").value = draft.name;
                 if (draft.telefonnummer) document.getElementById("telefonnummer").value = draft.telefonnummer;
-                if (draft.cb_anzahl) document.getElementById("cb_anzahl").value = draft.cb_anzahl;
+                if (draft.cb_anzahl) {
+                    const cbAnzahlInput = document.getElementById("cb_anzahl");
+                    if (cbAnzahlInput) {
+                        cbAnzahlInput.value = draft.cb_anzahl;
+                    }
+                }
                 if (draft.inputMoney) document.getElementById("inputMoney").value = draft.inputMoney;
                 
                 showNotification('Formular-Entwurf wiederhergestellt', 'info');
@@ -1084,7 +1115,7 @@ document.addEventListener("DOMContentLoaded", function() {
             { id: 'name', description: 'Vor- und Nachname für die Anmeldung' },
             { id: 'telefonnummer', description: 'Telefonnummer für Rückfragen' },
             { id: 'inputMoney', description: 'Bezahlter Betrag in Euro' },
-            { id: 'cb_anzahl', description: 'Anzahl der abzuholenden Christbäume' }
+            { id: 'cb_anzahl', description: 'Anzahl der abzuholenden Christbäume (1-50)' }
         ];
 
         fields.forEach(({ id, description }) => {
