@@ -940,8 +940,3 @@ if (!document.getElementById('mobile-optimization-styles')) {
     style.textContent = mobileAnimationCSS;
     document.head.appendChild(style);
 }
-
-// Auto-Initialisierung
-document.addEventListener('DOMContentLoaded', () => {
-    window.cbsMobileOptimizer = new CBSMobileOptimizer();
-});
