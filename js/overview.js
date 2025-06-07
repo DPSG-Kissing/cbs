@@ -1,116 +1,106 @@
+/**
+ * CBS Overview - Integration mit modernem Leaflet Map Manager
+ * Aktualisierte Version für bessere Performance und UX
+ */
+
 document.addEventListener("DOMContentLoaded", function() {
-    let map;
-    let standort;
-    let standort_circle;
+    let mapManager;
     let locationEnabled = false;
     const apiBase = "https://cbs.pfadfinder-kissing.de/backend/";
     
-    // Verbesserte Icon-Konfiguration
-    const redIcon = L.icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-    });
-
-    const greenIcon = L.icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-    });
-
-    let markersGroup = L.markerClusterGroup({ 
-        maxClusterRadius: 50, 
-        zoomToBoundsOnClick: true,
-        spiderfyOnMaxZoom: true,
-        showCoverageOnHover: false
-    });
-    
     let showAbgeholte = false;
     let currentData = [];
+    let isLoading = false;
 
     // Initialisierung
-    initializeMap();
-    setupEventListeners();
-    fetchAndDisplayData();
+    initializeApplication();
 
-    function initializeMap() {
-        map = L.map("overview_map");
-        const osmUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-        const osmAttrib = "Map data © <a href='https://openstreetmap.org'>OpenStreetMap</a> contributors";
-        const osm = L.tileLayer(osmUrl, { attribution: osmAttrib });
+    async function initializeApplication() {
+        try {
+            // Moderne Leaflet Map Manager initialisieren
+            mapManager = new CBSMapManager({
+                enableGeolocation: true,
+                enableClustering: true,
+                enableRouting: false, // Vorerst deaktiviert
+                tileProvider: 'osm',
+                clusterRadius: 50,
+                defaultZoom: 15
+            });
 
-        // Gespeicherte Kartenposition laden oder Standardposition setzen
-        const savedLat = sessionStorage.getItem("lat");
-        const savedLng = sessionStorage.getItem("lng");
-        const savedZoom = sessionStorage.getItem("zoom");
+            // Karte initialisieren
+            await mapManager.init('overview_map');
 
-        if (savedLat && savedLng && savedZoom) {
-            map.setView([parseFloat(savedLat), parseFloat(savedLng)], parseInt(savedZoom));
-        } else {
-            map.setView([48.303808, 10.974612], 15);
+            // Event Listeners einrichten
+            setupEventListeners();
+            setupMapEventListeners();
+            
+            // Daten laden
+            await fetchAndDisplayData();
+            
+            console.log('CBS Overview erfolgreich initialisiert');
+            
+        } catch (error) {
+            console.error('Fehler bei der Initialisierung:', error);
+            showNotification('Fehler beim Laden der Karte. Bitte laden Sie die Seite neu.', 'error');
         }
-
-        map.addLayer(osm);
-        
-        // Kartenposition speichern bei Änderung
-        map.on('moveend', function() {
-            const center = map.getCenter();
-            const zoom = map.getZoom();
-            sessionStorage.setItem("lat", center.lat);
-            sessionStorage.setItem("lng", center.lng);
-            sessionStorage.setItem("zoom", zoom);
-        });
-
-        // Location Event Handler
-        map.on("locationfound", onLocationFound);
-        map.on("locationerror", onLocationError);
-    }
-
-    function onLocationFound(e) {
-        const radius = Math.min(e.accuracy, 1000); // Maximal 1km Radius
-
-        if (standort) {
-            map.removeLayer(standort);
-            map.removeLayer(standort_circle);
-        }
-
-        standort = L.marker(e.latlng, {
-            title: "Ihr Standort"
-        });
-        standort_circle = L.circle(e.latlng, {
-            radius: radius,
-            color: 'blue',
-            fillColor: '#30f',
-            fillOpacity: 0.2
-        });
-
-        map.addLayer(standort);
-        map.addLayer(standort_circle);
-    }
-
-    function onLocationError(e) {
-        console.error("Location error:", e.message);
-        showNotification("Standort konnte nicht ermittelt werden: " + e.message, "warning");
     }
 
     function setupEventListeners() {
         // Standort Toggle
         const toggleButton = document.getElementById("toggle-location");
-        toggleButton?.addEventListener("click", toggleLocation);
+        if (toggleButton) {
+            toggleButton.addEventListener("click", toggleLocation);
+        }
 
         // Filter Button
         const filterButton = document.getElementById("filter-button");
-        filterButton?.addEventListener("click", toggleAbgeholteFilter);
+        if (filterButton) {
+            filterButton.addEventListener("click", toggleAbgeholteFilter);
+        }
 
-        // Such-Input
+        // Such-Input mit Debouncing
         const searchInput = document.getElementById("filter-input");
-        searchInput?.addEventListener("input", handleSearch);
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener("input", (event) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    handleSearch(event);
+                }, 300);
+            });
+        }
+
+        // Refresh Button (optional)
+        const refreshButton = document.getElementById("refresh-data");
+        if (refreshButton) {
+            refreshButton.addEventListener("click", () => {
+                fetchAndDisplayData(true);
+            });
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', handleKeyboardShortcuts);
+    }
+
+    function setupMapEventListeners() {
+        // Status change events vom Map Manager
+        mapManager.on('statusChange', async (data) => {
+            await handleStatusChange(data);
+        });
+
+        // Location events
+        mapManager.on('locationFound', (data) => {
+            showNotification('Standort gefunden', 'success');
+        });
+
+        mapManager.on('locationError', (data) => {
+            showNotification('Standort konnte nicht ermittelt werden: ' + data.message, 'warning');
+        });
+
+        // Map initialization event
+        mapManager.on('mapInitialized', () => {
+            console.log('Karte erfolgreich initialisiert');
+        });
     }
 
     function toggleLocation() {
@@ -118,27 +108,28 @@ document.addEventListener("DOMContentLoaded", function() {
         locationEnabled = !locationEnabled;
         
         if (locationEnabled) {
-            map.locate({ 
-                setView: true, 
-                maxZoom: 16,
-                enableHighAccuracy: true,
-                timeout: 10000
-            });
-            toggleButton.textContent = "Standort Verbergen";
+            mapManager.startLocationTracking();
+            toggleButton.textContent = "Standort verbergen";
+            toggleButton.classList.remove('btn-primary');
+            toggleButton.classList.add('btn-success');
         } else {
-            if (standort) {
-                map.removeLayer(standort);
-                map.removeLayer(standort_circle);
-            }
-            toggleButton.textContent = "Standort Anzeigen";
+            mapManager.stopLocationTracking();
+            toggleButton.textContent = "Standort anzeigen";
+            toggleButton.classList.remove('btn-success');
+            toggleButton.classList.add('btn-primary');
         }
     }
 
     function toggleAbgeholteFilter() {
         showAbgeholte = !showAbgeholte;
         const filterButton = document.getElementById("filter-button");
-        filterButton.textContent = showAbgeholte ? 
-            "Abgeholte ausblenden" : "Abgeholte einblenden";
+        
+        if (filterButton) {
+            filterButton.textContent = showAbgeholte ? 
+                "Abgeholte ausblenden" : "Abgeholte einblenden";
+            filterButton.classList.toggle('btn-warning');
+            filterButton.classList.toggle('btn-info');
+        }
         
         updateDisplay();
     }
@@ -150,6 +141,11 @@ document.addEventListener("DOMContentLoaded", function() {
         rows.forEach((row, index) => {
             if (index === rows.length - 1) return; // Summe-Zeile ignorieren
             
+            if (!filter) {
+                row.style.display = "";
+                return;
+            }
+
             const cells = row.querySelectorAll("td");
             const match = Array.from(cells).some(cell =>
                 cell.textContent.toLowerCase().includes(filter)
@@ -157,16 +153,60 @@ document.addEventListener("DOMContentLoaded", function() {
 
             row.style.display = match ? "" : "none";
         });
+
+        // Update statistics for visible rows
+        updateVisibleStatistics();
     }
 
-    async function fetchAndDisplayData() {
+    function handleKeyboardShortcuts(event) {
+        // Ctrl/Cmd + R: Refresh data
+        if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
+            event.preventDefault();
+            fetchAndDisplayData(true);
+        }
+
+        // F: Toggle filter
+        if (event.key === 'f' && !event.ctrlKey && !event.metaKey) {
+            const searchInput = document.getElementById("filter-input");
+            if (searchInput && document.activeElement !== searchInput) {
+                event.preventDefault();
+                searchInput.focus();
+            }
+        }
+
+        // L: Toggle location
+        if (event.key === 'l' && !event.ctrlKey && !event.metaKey) {
+            event.preventDefault();
+            toggleLocation();
+        }
+
+        // Escape: Clear search
+        if (event.key === 'Escape') {
+            const searchInput = document.getElementById("filter-input");
+            if (searchInput && searchInput.value) {
+                searchInput.value = '';
+                handleSearch({ target: searchInput });
+            }
+        }
+    }
+
+    async function fetchAndDisplayData(forceRefresh = false) {
+        if (isLoading && !forceRefresh) return;
+        
         try {
+            isLoading = true;
             showLoading(true);
             
-            const response = await fetch(`${apiBase}get_data.php`, {
+            // Cache-Buster für Force Refresh
+            const url = forceRefresh ? 
+                `${apiBase}get_data.php?_t=${Date.now()}` : 
+                `${apiBase}get_data.php`;
+            
+            const response = await fetch(url, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
+                    "Cache-Control": forceRefresh ? "no-cache" : "max-age=60"
                 },
             });
 
@@ -175,13 +215,24 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             const data = await response.json();
+            
+            // Validate data structure
+            if (!Array.isArray(data)) {
+                throw new Error('Invalid data format received');
+            }
+
             currentData = data;
             updateDisplay();
+            
+            if (forceRefresh) {
+                showNotification(`${data.length} Einträge erfolgreich aktualisiert`, 'success');
+            }
             
         } catch (error) {
             console.error("Error fetching data:", error);
             showNotification("Fehler beim Laden der Daten: " + error.message, "error");
         } finally {
+            isLoading = false;
             showLoading(false);
         }
     }
@@ -189,40 +240,50 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateDisplay() {
         updateMap(currentData);
         updateTable(currentData);
+        updateStatistics(currentData);
     }
 
     function updateMap(data) {
-        markersGroup.clearLayers();
+        // Clear existing markers
+        mapManager.clearMarkers();
 
+        // Add markers for each entry
         data.forEach(entry => {
-            const icon = entry.status == 0 ? redIcon : greenIcon;
-            const marker = L.marker([entry.lat, entry.lng], { icon });
-            
-            const statusText = entry.status == 0 ? "Nicht Abgeholt" : "Abgeholt";
-            const buttonColor = entry.status == 0 ? "btn-danger" : "btn-success";
-            const buttonText = entry.status == 0 ? "Als Abgeholt markieren" : "Als Nicht Abgeholt markieren";
+            try {
+                const markerData = {
+                    id: entry.id,
+                    name: entry.name,
+                    strasse: entry.strasse,
+                    telefonnummer: entry.telefonnummer,
+                    cb_anzahl: parseInt(entry.cb_anzahl),
+                    geld: parseFloat(entry.geld),
+                    status: parseInt(entry.status),
+                    lat: parseFloat(entry.lat),
+                    lng: parseFloat(entry.lng),
+                    created_at: entry.created_at,
+                    updated_at: entry.updated_at
+                };
 
-            marker.bindPopup(`
-                <div class="popup-content">
-                    <h6><strong>${escapeHtml(entry.name)}</strong></h6>
-                    <p><strong>Tel:</strong> ${escapeHtml(entry.telefonnummer)}<br>
-                    <strong>Straße:</strong> ${escapeHtml(entry.strasse)}<br>
-                    <strong>Anzahl:</strong> ${entry.cb_anzahl}<br>
-                    <strong>Bezahlt:</strong> €${parseFloat(entry.geld).toFixed(2)}<br>
-                    <strong>Status:</strong> ${statusText}</p>
-                    <button value="${entry.id}" data-status="${entry.status}" 
-                            class="btn ${buttonColor} btn-sm btn-status w-100">
-                        ${buttonText}
-                    </button>
-                </div>
-            `);
+                // Validate coordinates
+                if (isNaN(markerData.lat) || isNaN(markerData.lng) ||
+                    Math.abs(markerData.lat) > 90 || Math.abs(markerData.lng) > 180) {
+                    console.warn('Invalid coordinates for entry:', entry.id);
+                    return;
+                }
 
-            marker.options.entryId = entry.id;
-            markersGroup.addLayer(marker);
+                mapManager.addMarker(markerData.lat, markerData.lng, markerData);
+                
+            } catch (error) {
+                console.error('Error adding marker for entry:', entry.id, error);
+            }
         });
 
-        map.addLayer(markersGroup);
-        setupMapButtonListeners();
+        // Fit map to markers if we have data
+        if (data.length > 0) {
+            setTimeout(() => {
+                mapManager.fitToMarkers([20, 20]);
+            }, 100);
+        }
     }
 
     function updateTable(data) {
@@ -230,91 +291,258 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!tableBody) return;
 
         let rows = "";
-        let summe = 0;
-        let anzahlGesamt = 0;
         let displayedCount = 0;
 
         data.forEach((entry, index) => {
-            const color = entry.status == 0 ? "table-danger" : "table-success";
+            const statusClass = entry.status == 1 ? "table-success" : "table-danger";
             const shouldShow = entry.status == 0 || showAbgeholte;
             const displayStyle = shouldShow ? "" : "display: none;";
             
             if (shouldShow) {
                 displayedCount++;
-                summe += parseFloat(entry.geld);
-                anzahlGesamt += parseInt(entry.cb_anzahl);
             }
 
+            // Enhanced row with better accessibility
             rows += `
-                <tr id="row-${entry.id}" class="${color}" style="${displayStyle}">
+                <tr id="row-${entry.id}" class="${statusClass}" style="${displayStyle}" 
+                    data-entry-id="${entry.id}" data-status="${entry.status}">
                     <th scope="row">${index + 1}</th>
-                    <td>${escapeHtml(entry.name)}</td>
-                    <td>${escapeHtml(entry.strasse)}</td>
-                    <td>${escapeHtml(entry.telefonnummer)}</td>
-                    <td>${entry.cb_anzahl}</td>
-                    <td>€${parseFloat(entry.geld).toFixed(2)}</td>
                     <td>
-                        <div class="btn-group" role="group">
-                            <button value="${entry.id}" class="btn btn-sm btn-danger table_del" 
+                        <div class="d-flex align-items-center">
+                            <span class="me-2">${escapeHtml(entry.name)}</span>
+                            ${entry.status == 1 ? '<span class="badge bg-success ms-auto">✓</span>' : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <span title="${escapeHtml(entry.strasse)}">${escapeHtml(truncateText(entry.strasse, 30))}</span>
+                    </td>
+                    <td>
+                        <a href="tel:${escapeHtml(entry.telefonnummer)}" class="text-decoration-none">
+                            ${escapeHtml(entry.telefonnummer)}
+                        </a>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge bg-primary">${entry.cb_anzahl}</span>
+                    </td>
+                    <td class="text-end">
+                        <strong>€${parseFloat(entry.geld).toFixed(2)}</strong>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button class="btn btn-outline-primary btn-map" 
+                                    data-lat="${entry.lat}" data-lng="${entry.lng}"
+                                    title="Auf Karte anzeigen">
+                                📍
+                            </button>
+                            <button class="btn btn-outline-${entry.status == 1 ? 'warning' : 'success'} btn-status" 
+                                    data-id="${entry.id}" data-status="${entry.status}"
+                                    title="${entry.status == 1 ? 'Als nicht abgeholt markieren' : 'Als abgeholt markieren'}">
+                                ${entry.status == 1 ? '↩️' : '✅'}
+                            </button>
+                            <button class="btn btn-outline-danger btn-delete" 
+                                    data-id="${entry.id}" 
                                     data-name="${escapeHtml(entry.name)}" 
                                     data-strasse="${escapeHtml(entry.strasse)}"
                                     title="Eintrag löschen">
-                                Löschen
-                            </button>
-                            <button value="${entry.id}" data-status="${entry.status}" 
-                                    class="btn btn-sm btn-success table_status_abgeholt"
-                                    title="Status ändern">
-                                ${entry.status == 0 ? "Abgeholt" : "Zurücksetzen"}
+                                🗑️
                             </button>
                         </div>
                     </td>
                 </tr>`;
         });
 
-        // Summenzeile
-        rows += `
-            <tr class="table-info">
-                <th scope="row"><strong>Summe (${displayedCount})</strong></th>
-                <td><strong>Gesamt</strong></td>
-                <td colspan="2"></td>
-                <td><strong>${anzahlGesamt}</strong></td>
-                <td><strong>€${summe.toFixed(2)}</strong></td>
+        tableBody.innerHTML = rows;
+        setupTableButtonListeners();
+        updateTableStatistics(data);
+    }
+
+    function updateTableStatistics(data) {
+        const visibleData = showAbgeholte ? data : data.filter(entry => entry.status == 0);
+        
+        const totalEntries = visibleData.length;
+        const totalTrees = visibleData.reduce((sum, entry) => sum + parseInt(entry.cb_anzahl), 0);
+        const totalMoney = visibleData.reduce((sum, entry) => sum + parseFloat(entry.geld), 0);
+        const completedEntries = visibleData.filter(entry => entry.status == 1).length;
+
+        // Add or update statistics row
+        const tableBody = document.getElementById("table_overview");
+        const existingStatsRow = tableBody.querySelector('.table-stats');
+        
+        if (existingStatsRow) {
+            existingStatsRow.remove();
+        }
+
+        const statsRow = `
+            <tr class="table-info table-stats">
+                <th scope="row"><strong>📊</strong></th>
+                <td><strong>Gesamt (${totalEntries})</strong></td>
+                <td colspan="2">
+                    <small>
+                        ${completedEntries} abgeholt, 
+                        ${totalEntries - completedEntries} offen
+                    </small>
+                </td>
+                <td class="text-center"><strong>${totalTrees}</strong></td>
+                <td class="text-end"><strong>€${totalMoney.toFixed(2)}</strong></td>
                 <td></td>
             </tr>`;
 
-        tableBody.innerHTML = rows;
-        setupTableButtonListeners();
+        tableBody.insertAdjacentHTML('beforeend', statsRow);
     }
 
-    function setupTableButtonListeners() {
-        // Löschen-Buttons
-        document.querySelectorAll(".table_del").forEach(button => {
-            button.addEventListener("click", handleDelete);
-        });
+    function updateStatistics(data) {
+        // Update page-level statistics if elements exist
+        const statsElements = {
+            total: document.getElementById('stats-total'),
+            completed: document.getElementById('stats-completed'),
+            pending: document.getElementById('stats-pending'),
+            trees: document.getElementById('stats-trees'),
+            money: document.getElementById('stats-money')
+        };
 
-        // Status-Buttons
-        document.querySelectorAll(".table_status_abgeholt").forEach(button => {
-            button.addEventListener("click", handleStatusChange);
-        });
-    }
+        const stats = {
+            total: data.length,
+            completed: data.filter(entry => entry.status == 1).length,
+            pending: data.filter(entry => entry.status == 0).length,
+            trees: data.reduce((sum, entry) => sum + parseInt(entry.cb_anzahl), 0),
+            money: data.reduce((sum, entry) => sum + parseFloat(entry.geld), 0)
+        };
 
-    function setupMapButtonListeners() {
-        map.on("popupopen", function(e) {
-            const popupButton = e.popup.getElement().querySelector(".btn-status");
-            if (popupButton) {
-                popupButton.addEventListener("click", handleStatusChange);
+        Object.keys(statsElements).forEach(key => {
+            if (statsElements[key]) {
+                const value = key === 'money' ? `€${stats[key].toFixed(2)}` : stats[key];
+                statsElements[key].textContent = value;
             }
         });
     }
 
-    async function handleDelete(event) {
-        const entryId = event.target.value;
-        const entryName = event.target.dataset.name;
-        const entryStrasse = event.target.dataset.strasse;
-
-        if (!confirm(`Möchten Sie wirklich den Eintrag von "${entryName}, ${entryStrasse}" löschen?`)) {
-            return;
+    function updateVisibleStatistics() {
+        const visibleRows = document.querySelectorAll("#table_overview tr:not(.table-stats):not([style*='display: none'])");
+        const count = visibleRows.length;
+        
+        // Update search results indicator
+        const searchInput = document.getElementById("filter-input");
+        if (searchInput && searchInput.value.trim()) {
+            const indicator = document.getElementById('search-results') || createSearchResultsIndicator();
+            indicator.textContent = `${count} Ergebnisse gefunden`;
+            indicator.style.display = 'block';
+        } else {
+            const indicator = document.getElementById('search-results');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
         }
+    }
+
+    function createSearchResultsIndicator() {
+        const indicator = document.createElement('div');
+        indicator.id = 'search-results';
+        indicator.className = 'alert alert-info alert-sm mt-2';
+        
+        const searchInput = document.getElementById("filter-input");
+        if (searchInput && searchInput.parentNode) {
+            searchInput.parentNode.appendChild(indicator);
+        }
+        
+        return indicator;
+    }
+
+    function setupTableButtonListeners() {
+        // Map view buttons
+        document.querySelectorAll(".btn-map").forEach(button => {
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+                const lat = parseFloat(button.dataset.lat);
+                const lng = parseFloat(button.dataset.lng);
+                
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    mapManager.map.setView([lat, lng], 18);
+                    
+                    // Scroll to map
+                    document.getElementById('overview_map').scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                }
+            });
+        });
+
+        // Status change buttons
+        document.querySelectorAll(".btn-status").forEach(button => {
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+                const id = button.dataset.id;
+                const currentStatus = parseInt(button.dataset.status);
+                
+                handleStatusChange({
+                    id: id,
+                    status: currentStatus,
+                    button: button
+                });
+            });
+        });
+
+        // Delete buttons
+        document.querySelectorAll(".btn-delete").forEach(button => {
+            button.addEventListener("click", (event) => {
+                event.preventDefault();
+                handleDelete(button);
+            });
+        });
+    }
+
+    async function handleStatusChange(data) {
+        const { id, status, button } = data;
+        const newStatus = status === 0 ? 1 : 0;
+
+        try {
+            showLoading(true);
+            
+            const response = await fetch(`${apiBase}change.php`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `id=${encodeURIComponent(id)}&status=${newStatus}`,
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                const statusText = newStatus === 1 ? "abgeholt" : "nicht abgeholt";
+                showNotification(`Status erfolgreich auf "${statusText}" geändert`, "success");
+                
+                // Update local data
+                const entry = currentData.find(item => item.id == id);
+                if (entry) {
+                    entry.status = newStatus;
+                }
+                
+                await fetchAndDisplayData(); // Refresh to ensure consistency
+                
+            } else {
+                throw new Error(result.message || "Statusänderung fehlgeschlagen");
+            }
+        } catch (error) {
+            console.error("Status change error:", error);
+            showNotification("Fehler beim Ändern des Status: " + error.message, "error");
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function handleDelete(button) {
+        const entryId = button.dataset.id;
+        const entryName = button.dataset.name;
+        const entryStrasse = button.dataset.strasse;
+
+        const confirmed = await showConfirmDialog(
+            'Eintrag löschen',
+            `Möchten Sie wirklich den Eintrag von "${entryName}, ${entryStrasse}" löschen?`,
+            'Diese Aktion kann nicht rückgängig gemacht werden.'
+        );
+
+        if (!confirmed) return;
 
         try {
             showLoading(true);
@@ -331,7 +559,11 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if (result.success) {
                 showNotification("Eintrag erfolgreich gelöscht", "success");
-                await fetchAndDisplayData();
+                
+                // Remove from local data
+                currentData = currentData.filter(item => item.id != entryId);
+                updateDisplay();
+                
             } else {
                 throw new Error(result.message || "Löschen fehlgeschlagen");
             }
@@ -343,62 +575,41 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    async function handleStatusChange(event) {
-        const entryId = event.target.value;
-        const currentStatus = parseInt(event.target.dataset.status);
-        const newStatus = currentStatus === 0 ? 1 : 0;
-
-        try {
-            showLoading(true);
-            
-            const response = await fetch(`${apiBase}change.php`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: `id=${encodeURIComponent(entryId)}&status=${newStatus}`,
-            });
-
-            const result = await response.json();
-            
-            if (result.success) {
-                const statusText = newStatus === 1 ? "abgeholt" : "nicht abgeholt";
-                showNotification(`Status erfolgreich auf "${statusText}" geändert`, "success");
-                await fetchAndDisplayData();
-            } else {
-                throw new Error(result.message || "Statusänderung fehlgeschlagen");
-            }
-        } catch (error) {
-            console.error("Status change error:", error);
-            showNotification("Fehler beim Ändern des Status: " + error.message, "error");
-        } finally {
-            showLoading(false);
-        }
-    }
-
-    // Hilfsfunktionen
+    // Utility functions
     function escapeHtml(text) {
         const div = document.createElement('div');
-        div.textContent = text;
+        div.textContent = text || '';
         return div.innerHTML;
     }
 
+    function truncateText(text, maxLength) {
+        if (!text) return '';
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    }
+
     function showLoading(show) {
-        // Einfacher Loading-Indikator
         let loader = document.getElementById('loading-indicator');
+        
         if (show && !loader) {
             loader = document.createElement('div');
             loader.id = 'loading-indicator';
             loader.className = 'position-fixed top-50 start-50 translate-middle';
-            loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Laden...</span></div>';
+            loader.style.zIndex = '9999';
+            loader.innerHTML = `
+                <div class="d-flex flex-column align-items-center bg-white p-4 rounded shadow">
+                    <div class="spinner-border text-primary mb-2" role="status">
+                        <span class="visually-hidden">Laden...</span>
+                    </div>
+                    <small class="text-muted">Daten werden aktualisiert...</small>
+                </div>
+            `;
             document.body.appendChild(loader);
         } else if (!show && loader) {
             loader.remove();
         }
     }
 
-    function showNotification(message, type = 'info') {
-        // Einfache Notification
+    function showNotification(message, type = 'info', duration = 5000) {
         const alertClass = {
             'success': 'alert-success',
             'error': 'alert-danger',
@@ -408,19 +619,82 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const notification = document.createElement('div');
         notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
-        notification.style.zIndex = '9999';
+        notification.style.zIndex = '10000';
+        notification.style.maxWidth = '400px';
         notification.innerHTML = `
-            ${message}
+            <div style="white-space: pre-line;">${escapeHtml(message)}</div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         `;
 
         document.body.appendChild(notification);
 
-        // Auto-remove nach 5 Sekunden
+        // Auto-remove
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.remove();
             }
-        }, 5000);
+        }, duration);
     }
+
+    async function showConfirmDialog(title, message, details = '') {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal fade show d-block';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+            modal.innerHTML = `
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${escapeHtml(title)}</h5>
+                        </div>
+                        <div class="modal-body">
+                            <p class="mb-2">${escapeHtml(message)}</p>
+                            ${details ? `<small class="text-muted">${escapeHtml(details)}</small>` : ''}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-action="cancel">Abbrechen</button>
+                            <button type="button" class="btn btn-danger" data-action="confirm">Löschen</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            modal.addEventListener('click', (e) => {
+                const action = e.target.dataset.action;
+                if (action === 'confirm') {
+                    resolve(true);
+                    modal.remove();
+                } else if (action === 'cancel' || e.target === modal) {
+                    resolve(false);
+                    modal.remove();
+                }
+            });
+
+            // ESC key handling
+            const escHandler = (e) => {
+                if (e.key === 'Escape') {
+                    resolve(false);
+                    modal.remove();
+                    document.removeEventListener('keydown', escHandler);
+                }
+            };
+            document.addEventListener('keydown', escHandler);
+        });
+    }
+
+    // Auto-refresh every 30 seconds (optional)
+    setInterval(() => {
+        if (!isLoading && document.visibilityState === 'visible') {
+            fetchAndDisplayData();
+        }
+    }, 30000);
+
+    // Refresh when page becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && !isLoading) {
+            fetchAndDisplayData();
+        }
+    });
 });
