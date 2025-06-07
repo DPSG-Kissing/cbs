@@ -2,10 +2,11 @@ document.addEventListener("DOMContentLoaded", function() {
     let map;
     let standort;
     let standort_circle;
-    let locationEnabled = false; // Zustand der Standortanzeige
+    let locationEnabled = false;
     const apiBase = "https://cbs.pfadfinder-kissing.de/backend/";
-
-    const redIcon = new L.Icon({
+    
+    // Verbesserte Icon-Konfiguration
+    const redIcon = L.icon({
         iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
         shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
         iconSize: [25, 41],
@@ -14,7 +15,7 @@ document.addEventListener("DOMContentLoaded", function() {
         shadowSize: [41, 41],
     });
 
-    const greenIcon = new L.Icon({
+    const greenIcon = L.icon({
         iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
         shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
         iconSize: [25, 41],
@@ -23,281 +24,403 @@ document.addEventListener("DOMContentLoaded", function() {
         shadowSize: [41, 41],
     });
 
-    let markersGroup = L.markerClusterGroup({ maxClusterRadius: 50, zoomToBoundsOnClick: true });
-    let showAbgeholte = false; // Zustand für "Abgeholte einblenden"
+    let markersGroup = L.markerClusterGroup({ 
+        maxClusterRadius: 50, 
+        zoomToBoundsOnClick: true,
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false
+    });
+    
+    let showAbgeholte = false;
+    let currentData = [];
 
-    make_map();
-    setupLocationToggle();
-    setupFilterButton();
-    setupSearchInput();
+    // Initialisierung
+    initializeMap();
+    setupEventListeners();
     fetchAndDisplayData();
 
-    function make_map() {
+    function initializeMap() {
         map = L.map("overview_map");
         const osmUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
         const osmAttrib = "Map data © <a href='https://openstreetmap.org'>OpenStreetMap</a> contributors";
-        const osm = new L.TileLayer(osmUrl, { attribution: osmAttrib });
+        const osm = L.tileLayer(osmUrl, { attribution: osmAttrib });
 
-        if (sessionStorage.getItem("lat") && sessionStorage.getItem("lng") && sessionStorage.getItem("zoom")) {
-            map.setView(
-                new L.LatLng(sessionStorage.getItem("lat"), sessionStorage.getItem("lng")),
-                sessionStorage.getItem("zoom")
-            );
+        // Gespeicherte Kartenposition laden oder Standardposition setzen
+        const savedLat = sessionStorage.getItem("lat");
+        const savedLng = sessionStorage.getItem("lng");
+        const savedZoom = sessionStorage.getItem("zoom");
+
+        if (savedLat && savedLng && savedZoom) {
+            map.setView([parseFloat(savedLat), parseFloat(savedLng)], parseInt(savedZoom));
         } else {
-            map.setView(new L.LatLng(48.303808, 10.974612), 15);
+            map.setView([48.303808, 10.974612], 15);
         }
 
         map.addLayer(osm);
+        
+        // Kartenposition speichern bei Änderung
+        map.on('moveend', function() {
+            const center = map.getCenter();
+            const zoom = map.getZoom();
+            sessionStorage.setItem("lat", center.lat);
+            sessionStorage.setItem("lng", center.lng);
+            sessionStorage.setItem("zoom", zoom);
+        });
+
+        // Location Event Handler
         map.on("locationfound", onLocationFound);
         map.on("locationerror", onLocationError);
     }
 
     function onLocationFound(e) {
-        const radius = e.accuracy;
+        const radius = Math.min(e.accuracy, 1000); // Maximal 1km Radius
 
         if (standort) {
             map.removeLayer(standort);
             map.removeLayer(standort_circle);
         }
 
-        standort = L.marker(e.latlng);
-        standort_circle = L.circle(e.latlng, radius);
+        standort = L.marker(e.latlng, {
+            title: "Ihr Standort"
+        });
+        standort_circle = L.circle(e.latlng, {
+            radius: radius,
+            color: 'blue',
+            fillColor: '#30f',
+            fillOpacity: 0.2
+        });
 
         map.addLayer(standort);
         map.addLayer(standort_circle);
     }
 
     function onLocationError(e) {
-        alert(e.message);
+        console.error("Location error:", e.message);
+        showNotification("Standort konnte nicht ermittelt werden: " + e.message, "warning");
     }
 
-    function setupLocationToggle() {
+    function setupEventListeners() {
+        // Standort Toggle
         const toggleButton = document.getElementById("toggle-location");
-        toggleButton.addEventListener("click", () => {
-            locationEnabled = !locationEnabled;
-            if (locationEnabled) {
-                map.locate({ setView: true, maxZoom: 10 });
-                toggleButton.textContent = "Standort Verbergen";
-            } else {
-                if (standort) {
-                    map.removeLayer(standort);
-                    map.removeLayer(standort_circle);
-                }
-                toggleButton.textContent = "Standort Anzeigen";
+        toggleButton?.addEventListener("click", toggleLocation);
+
+        // Filter Button
+        const filterButton = document.getElementById("filter-button");
+        filterButton?.addEventListener("click", toggleAbgeholteFilter);
+
+        // Such-Input
+        const searchInput = document.getElementById("filter-input");
+        searchInput?.addEventListener("input", handleSearch);
+    }
+
+    function toggleLocation() {
+        const toggleButton = document.getElementById("toggle-location");
+        locationEnabled = !locationEnabled;
+        
+        if (locationEnabled) {
+            map.locate({ 
+                setView: true, 
+                maxZoom: 16,
+                enableHighAccuracy: true,
+                timeout: 10000
+            });
+            toggleButton.textContent = "Standort Verbergen";
+        } else {
+            if (standort) {
+                map.removeLayer(standort);
+                map.removeLayer(standort_circle);
             }
+            toggleButton.textContent = "Standort Anzeigen";
+        }
+    }
+
+    function toggleAbgeholteFilter() {
+        showAbgeholte = !showAbgeholte;
+        const filterButton = document.getElementById("filter-button");
+        filterButton.textContent = showAbgeholte ? 
+            "Abgeholte ausblenden" : "Abgeholte einblenden";
+        
+        updateDisplay();
+    }
+
+    function handleSearch(event) {
+        const filter = event.target.value.toLowerCase().trim();
+        const rows = document.querySelectorAll("#table_overview tr");
+
+        rows.forEach((row, index) => {
+            if (index === rows.length - 1) return; // Summe-Zeile ignorieren
+            
+            const cells = row.querySelectorAll("td");
+            const match = Array.from(cells).some(cell =>
+                cell.textContent.toLowerCase().includes(filter)
+            );
+
+            row.style.display = match ? "" : "none";
         });
     }
 
     async function fetchAndDisplayData() {
         try {
+            showLoading(true);
+            
             const response = await fetch(`${apiBase}get_data.php`, {
-                method: "POST",
+                method: "GET",
                 headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
+                    "Content-Type": "application/json",
                 },
             });
 
-            if (!response.ok) throw new Error("Fehler beim Abrufen der Daten");
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
 
             const data = await response.json();
-            updateMap(data);
-            updateTable(data);
+            currentData = data;
+            updateDisplay();
+            
         } catch (error) {
             console.error("Error fetching data:", error);
+            showNotification("Fehler beim Laden der Daten: " + error.message, "error");
+        } finally {
+            showLoading(false);
         }
     }
 
+    function updateDisplay() {
+        updateMap(currentData);
+        updateTable(currentData);
+    }
+
     function updateMap(data) {
-        markersGroup.clearLayers(); // Alte Marker entfernen
+        markersGroup.clearLayers();
 
-        data.forEach((entry) => {
+        data.forEach(entry => {
             const icon = entry.status == 0 ? redIcon : greenIcon;
-
             const marker = L.marker([entry.lat, entry.lng], { icon });
+            
+            const statusText = entry.status == 0 ? "Nicht Abgeholt" : "Abgeholt";
             const buttonColor = entry.status == 0 ? "btn-danger" : "btn-success";
+            const buttonText = entry.status == 0 ? "Als Abgeholt markieren" : "Als Nicht Abgeholt markieren";
 
-            marker.bindPopup(
-                `<b>Name: ${entry.name}</b><br>
-                Tel: ${entry.telefonnummer}<br>
-                Straße: ${entry.strasse}<br>
-                <p>Anzahl: ${entry.cb_anzahl}</p>
-                <button value="${entry.id}" data-status="${entry.status}" class="btn ${buttonColor} btn-status">
-                    ${entry.status == 0 ? "Abgeholt" : "Nicht Abgeholt"}
-                </button>`
-            );
+            marker.bindPopup(`
+                <div class="popup-content">
+                    <h6><strong>${escapeHtml(entry.name)}</strong></h6>
+                    <p><strong>Tel:</strong> ${escapeHtml(entry.telefonnummer)}<br>
+                    <strong>Straße:</strong> ${escapeHtml(entry.strasse)}<br>
+                    <strong>Anzahl:</strong> ${entry.cb_anzahl}<br>
+                    <strong>Bezahlt:</strong> €${parseFloat(entry.geld).toFixed(2)}<br>
+                    <strong>Status:</strong> ${statusText}</p>
+                    <button value="${entry.id}" data-status="${entry.status}" 
+                            class="btn ${buttonColor} btn-sm btn-status w-100">
+                        ${buttonText}
+                    </button>
+                </div>
+            `);
 
-            marker.options.id = entry.id; // ID für Updates speichern
+            marker.options.entryId = entry.id;
             markersGroup.addLayer(marker);
         });
 
         map.addLayer(markersGroup);
-        setupMapButtonListeners(); // Popup-Button-Listener erneut setzen
+        setupMapButtonListeners();
     }
 
     function updateTable(data) {
         const tableBody = document.getElementById("table_overview");
+        if (!tableBody) return;
+
         let rows = "";
         let summe = 0;
         let anzahlGesamt = 0;
+        let displayedCount = 0;
 
         data.forEach((entry, index) => {
             const color = entry.status == 0 ? "table-danger" : "table-success";
-            const displayStyle = entry.status == 0 || showAbgeholte ? "" : "display: none;";
-            summe += parseFloat(entry.geld);
-            anzahlGesamt += parseInt(entry.cb_anzahl);
+            const shouldShow = entry.status == 0 || showAbgeholte;
+            const displayStyle = shouldShow ? "" : "display: none;";
+            
+            if (shouldShow) {
+                displayedCount++;
+                summe += parseFloat(entry.geld);
+                anzahlGesamt += parseInt(entry.cb_anzahl);
+            }
 
             rows += `
-                <tr id="${index}" class="${color}" style="${displayStyle}">
+                <tr id="row-${entry.id}" class="${color}" style="${displayStyle}">
                     <th scope="row">${index + 1}</th>
-                    <td>${entry.name}</td>
-                    <td>${entry.strasse}</td>
-                    <td>${entry.telefonnummer}</td>
+                    <td>${escapeHtml(entry.name)}</td>
+                    <td>${escapeHtml(entry.strasse)}</td>
+                    <td>${escapeHtml(entry.telefonnummer)}</td>
                     <td>${entry.cb_anzahl}</td>
-                    <td>${parseFloat(entry.geld).toFixed(2)}€</td>
+                    <td>€${parseFloat(entry.geld).toFixed(2)}</td>
                     <td>
-                        <button value="${entry.id}" class="btn btn-danger table_del" data-name="${entry.name}" data-strasse="${entry.strasse}">Löschen</button>
-                        <button value="${entry.id}" data-status="${entry.status}" class="btn btn-success table_status_abgeholt">Abgeholt</button>
+                        <div class="btn-group" role="group">
+                            <button value="${entry.id}" class="btn btn-sm btn-danger table_del" 
+                                    data-name="${escapeHtml(entry.name)}" 
+                                    data-strasse="${escapeHtml(entry.strasse)}"
+                                    title="Eintrag löschen">
+                                Löschen
+                            </button>
+                            <button value="${entry.id}" data-status="${entry.status}" 
+                                    class="btn btn-sm btn-success table_status_abgeholt"
+                                    title="Status ändern">
+                                ${entry.status == 0 ? "Abgeholt" : "Zurücksetzen"}
+                            </button>
+                        </div>
                     </td>
                 </tr>`;
         });
 
+        // Summenzeile
         rows += `
-            <tr class="table-success">
-                <th scope="row"></th>
-                <td>Summe</td>
-                <td></td>
-                <td></td>
-                <td>${anzahlGesamt}</td>
-                <td>${summe.toFixed(2)}€</td>
+            <tr class="table-info">
+                <th scope="row"><strong>Summe (${displayedCount})</strong></th>
+                <td><strong>Gesamt</strong></td>
+                <td colspan="2"></td>
+                <td><strong>${anzahlGesamt}</strong></td>
+                <td><strong>€${summe.toFixed(2)}</strong></td>
                 <td></td>
             </tr>`;
 
         tableBody.innerHTML = rows;
-        setupButtonListeners(); // Button-Listener erneut setzen
+        setupTableButtonListeners();
     }
 
-    function setupFilterButton() {
-        const filterButton = document.getElementById("filter-button");
-        filterButton.addEventListener("click", () => {
-            showAbgeholte = !showAbgeholte;
-            fetchAndDisplayData(); // Tabelle aktualisieren
+    function setupTableButtonListeners() {
+        // Löschen-Buttons
+        document.querySelectorAll(".table_del").forEach(button => {
+            button.addEventListener("click", handleDelete);
+        });
+
+        // Status-Buttons
+        document.querySelectorAll(".table_status_abgeholt").forEach(button => {
+            button.addEventListener("click", handleStatusChange);
         });
     }
-
-    function setupSearchInput() {
-        const searchInput = document.getElementById("filter-input");
-        searchInput.addEventListener("input", function() {
-            const filter = this.value.toLowerCase();
-            const rows = document.querySelectorAll("#table_overview tr");
-
-            rows.forEach((row, index) => {
-                if (index === rows.length - 1) return; // Summe-Zeile ignorieren
-                const cells = row.querySelectorAll("td");
-                const match = Array.from(cells).some((cell) =>
-                    cell.textContent.toLowerCase().includes(filter)
-                );
-
-                row.style.display = match ? "" : "none";
-            });
-        });
-    }
-
-    function setupButtonListeners() {
-        // Event-Listener für "Löschen"-Button
-        document.querySelectorAll(".table_del").forEach((button) => {
-            button.addEventListener("click", async function() {
-                const entryId = this.value;
-                const entryName = this.dataset.name;
-                const entryStrasse = this.dataset.strasse;
-
-                if (confirm(`Möchten Sie wirklich den Eintrag von "${entryName}, ${entryStrasse}" löschen?`)) {
-                    try {
-                        const response = await fetch(`${apiBase}delete.php`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/x-www-form-urlencoded",
-                            },
-                            body: `id=${entryId}`,
-                        });
-
-                        if (!response.ok) throw new Error("Fehler beim Löschen des Eintrags");
-
-                        const result = await response.json();
-                        if (result.success) {
-                            fetchAndDisplayData(); // Aktualisieren der Karte und Tabelle
-                        } else {
-                            console.error(result.message || "Löschen fehlgeschlagen");
-                        }
-                    } catch (error) {
-                        console.error("Fehler beim Löschen des Eintrags:", error);
-                    }
-                }
-            });
-        });
-
-        // Event-Listener für "Status ändern"-Button
-        document.querySelectorAll(".table_status_abgeholt").forEach((button) => {
-            button.addEventListener("click", async function() {
-                const entryId = this.value;
-                const currentStatus = parseInt(this.dataset.status);
-                const newStatus = currentStatus === 0 ? 1 : 0;
-
-                try {
-                    const response = await fetch(`${apiBase}change.php`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                        },
-                        body: `id=${entryId}&status=${newStatus}`,
-                    });
-
-                    if (!response.ok) throw new Error("Fehler beim Ändern des Status");
-
-                    const result = await response.json();
-                    if (result.success) {
-                        fetchAndDisplayData(); // Karte und Tabelle aktualisieren
-                    } else {
-                        console.error(result.message || "Statusänderung fehlgeschlagen");
-                    }
-                } catch (error) {
-                    console.error("Fehler beim Ändern des Status:", error);
-                }
-            });
-        });
-    }
-
 
     function setupMapButtonListeners() {
         map.on("popupopen", function(e) {
             const popupButton = e.popup.getElement().querySelector(".btn-status");
             if (popupButton) {
-                popupButton.addEventListener("click", async function() {
-                    const entryId = this.value;
-                    const currentStatus = parseInt(this.dataset.status);
-                    const newStatus = currentStatus === 0 ? 1 : 0;
-
-                    try {
-                        const response = await fetch(`${apiBase}change.php`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/x-www-form-urlencoded",
-                            },
-                            body: `id=${entryId}&status=${newStatus}`,
-                        });
-
-                        if (!response.ok) throw new Error("Fehler beim Ändern des Status");
-
-                        const result = await response.json();
-                        if (result.success) {
-                            fetchAndDisplayData(); // Karte und Tabelle aktualisieren
-                        } else {
-                            console.error(result.message || "Statusänderung fehlgeschlagen");
-                        }
-                    } catch (error) {
-                        console.error("Fehler beim Ändern des Status:", error);
-                    }
-                });
+                popupButton.addEventListener("click", handleStatusChange);
             }
         });
+    }
+
+    async function handleDelete(event) {
+        const entryId = event.target.value;
+        const entryName = event.target.dataset.name;
+        const entryStrasse = event.target.dataset.strasse;
+
+        if (!confirm(`Möchten Sie wirklich den Eintrag von "${entryName}, ${entryStrasse}" löschen?`)) {
+            return;
+        }
+
+        try {
+            showLoading(true);
+            
+            const response = await fetch(`${apiBase}delete.php`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `id=${encodeURIComponent(entryId)}`,
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                showNotification("Eintrag erfolgreich gelöscht", "success");
+                await fetchAndDisplayData();
+            } else {
+                throw new Error(result.message || "Löschen fehlgeschlagen");
+            }
+        } catch (error) {
+            console.error("Delete error:", error);
+            showNotification("Fehler beim Löschen: " + error.message, "error");
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function handleStatusChange(event) {
+        const entryId = event.target.value;
+        const currentStatus = parseInt(event.target.dataset.status);
+        const newStatus = currentStatus === 0 ? 1 : 0;
+
+        try {
+            showLoading(true);
+            
+            const response = await fetch(`${apiBase}change.php`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: `id=${encodeURIComponent(entryId)}&status=${newStatus}`,
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                const statusText = newStatus === 1 ? "abgeholt" : "nicht abgeholt";
+                showNotification(`Status erfolgreich auf "${statusText}" geändert`, "success");
+                await fetchAndDisplayData();
+            } else {
+                throw new Error(result.message || "Statusänderung fehlgeschlagen");
+            }
+        } catch (error) {
+            console.error("Status change error:", error);
+            showNotification("Fehler beim Ändern des Status: " + error.message, "error");
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // Hilfsfunktionen
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showLoading(show) {
+        // Einfacher Loading-Indikator
+        let loader = document.getElementById('loading-indicator');
+        if (show && !loader) {
+            loader = document.createElement('div');
+            loader.id = 'loading-indicator';
+            loader.className = 'position-fixed top-50 start-50 translate-middle';
+            loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Laden...</span></div>';
+            document.body.appendChild(loader);
+        } else if (!show && loader) {
+            loader.remove();
+        }
+    }
+
+    function showNotification(message, type = 'info') {
+        // Einfache Notification
+        const alertClass = {
+            'success': 'alert-success',
+            'error': 'alert-danger',
+            'warning': 'alert-warning',
+            'info': 'alert-info'
+        }[type] || 'alert-info';
+
+        const notification = document.createElement('div');
+        notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        notification.style.zIndex = '9999';
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+
+        document.body.appendChild(notification);
+
+        // Auto-remove nach 5 Sekunden
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
     }
 });
