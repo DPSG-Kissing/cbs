@@ -51,10 +51,20 @@ function showLoginModal() {
         return;
     }
 
-    const modal = new bootstrap.Modal(modalElement, {
-        backdrop: 'static',
-        keyboard: false,
-    });
+    // BESSER - Mit Fokus-Management
+const modal = new bootstrap.Modal(modalElement, {
+    backdrop: 'static',
+    keyboard: false,
+    focus: true  // Automatisches Fokus-Management
+
+
+// Nach dem Öffnen
+modal.show();
+
+// Fokus auf Passwort-Feld setzen
+modalElement.addEventListener('shown.bs.modal', () => {
+    document.getElementById('password').focus();
+});
 
     modal.show();
 
