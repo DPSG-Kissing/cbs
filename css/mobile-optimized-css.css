@@ -1,0 +1,701 @@
+/* =====================================================
+   CBS Tool - Mobile-First Responsive CSS
+   Optimiert für alle Geräte und Browser
+   ===================================================== */
+
+/* CSS Custom Properties für Konsistenz */
+:root {
+    /* Touch Target Sizes (44px minimum für alle Plattformen) */
+    --touch-target-min: 44px;
+    --touch-target-recommended: 48px;
+    --touch-target-large: 56px;
+    
+    /* Spacing für verschiedene Gerätegrößen */
+    --spacing-xs: 0.25rem;  /* 4px */
+    --spacing-sm: 0.5rem;   /* 8px */
+    --spacing-md: 1rem;     /* 16px */
+    --spacing-lg: 1.5rem;   /* 24px */
+    --spacing-xl: 2rem;     /* 32px */
+    --spacing-xxl: 3rem;    /* 48px */
+    
+    /* Responsive Font Sizes */
+    --font-size-xs: clamp(0.75rem, 2vw, 0.875rem);
+    --font-size-sm: clamp(0.875rem, 2.5vw, 1rem);
+    --font-size-base: clamp(1rem, 3vw, 1.125rem);
+    --font-size-lg: clamp(1.125rem, 3.5vw, 1.25rem);
+    --font-size-xl: clamp(1.25rem, 4vw, 1.5rem);
+    
+    /* Interactive States */
+    --transition-fast: 0.15s ease-out;
+    --transition-normal: 0.3s ease-out;
+    --transition-slow: 0.5s ease-out;
+    
+    /* Touch Feedback */
+    --touch-feedback-scale: 0.95;
+    --touch-feedback-opacity: 0.7;
+    
+    /* Safe Areas für iPhone X+ */
+    --safe-area-top: env(safe-area-inset-top, 0);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0);
+    --safe-area-left: env(safe-area-inset-left, 0);
+    --safe-area-right: env(safe-area-inset-right, 0);
+}
+
+/* =====================================================
+   UNIVERSAL MOBILE OPTIMIZATIONS
+   ===================================================== */
+
+/* Prevent text size adjust in landscape orientation */
+html {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    
+    /* Smooth scrolling für alle Browser */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+body {
+    /* Prevent pull-to-refresh */
+    overscroll-behavior-y: contain;
+    
+    /* Optimized font rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    
+    /* Safe area padding für iPhone X+ */
+    padding-left: var(--safe-area-left);
+    padding-right: var(--safe-area-right);
+    
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
+/* =====================================================
+   TOUCH-OPTIMIZED INTERACTIVE ELEMENTS
+   ===================================================== */
+
+/* Enhanced Button Styles für alle Touch-Geräte */
+.btn {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+    padding: var(--spacing-sm) var(--spacing-md);
+    
+    /* Touch Feedback */
+    transition: all var(--transition-fast);
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    
+    /* Prevent text selection on touch */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    /* Better touch target */
+    position: relative;
+    
+    /* Ripple effect preparation */
+    overflow: hidden;
+}
+
+/* Touch States für alle Browser */
+.btn:active,
+.btn.active {
+    transform: scale(var(--touch-feedback-scale));
+    opacity: var(--touch-feedback-opacity);
+}
+
+/* iOS Safari specific touch improvements */
+@supports (-webkit-touch-callout: none) {
+    .btn {
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+}
+
+/* Enhanced Form Controls */
+.form-control,
+.form-select {
+    min-height: var(--touch-target-recommended);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-base);
+    
+    /* iOS Safari styling reset */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    /* Touch optimization */
+    touch-action: manipulation;
+    
+    /* Better focus for mobile */
+    transition: border-color var(--transition-fast), 
+                box-shadow var(--transition-fast),
+                transform var(--transition-fast);
+}
+
+/* Focus states optimized for touch devices */
+.form-control:focus,
+.form-select:focus,
+.btn:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.25);
+    
+    /* Slight scale for better visibility on small screens */
+    transform: scale(1.02);
+}
+
+/* Number input specific optimizations */
+input[type="number"] {
+    /* Force numeric keyboard on mobile */
+    inputmode: numeric;
+    pattern: "[0-9]*";
+}
+
+/* =====================================================
+   RESPONSIVE NAVIGATION
+   ===================================================== */
+
+.navbar {
+    /* Safe area padding */
+    padding-top: calc(var(--spacing-sm) + var(--safe-area-top));
+    padding-bottom: var(--spacing-sm);
+    
+    /* Prevent navbar from shrinking */
+    min-height: calc(var(--touch-target-large) + var(--safe-area-top));
+}
+
+.navbar-nav .nav-link {
+    min-height: var(--touch-target-min);
+    padding: var(--spacing-sm) var(--spacing-md);
+    display: flex;
+    align-items: center;
+    
+    /* Touch feedback */
+    transition: all var(--transition-fast);
+    -webkit-tap-highlight-color: rgba(255, 255, 255, 0.1);
+}
+
+.navbar-toggler {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: var(--spacing-xs);
+    border: 2px solid transparent;
+}
+
+/* =====================================================
+   ENHANCED TABLE RESPONSIVENESS
+   ===================================================== */
+
+.table-responsive {
+    /* Better horizontal scroll on touch devices */
+    -webkit-overflow-scrolling: touch;
+    overflow-x: auto;
+    
+    /* Scroll indicators */
+    background: 
+        linear-gradient(90deg, white 30%, transparent),
+        linear-gradient(90deg, transparent, white 70%) 100% 0,
+        radial-gradient(farthest-side at 0 50%, rgba(0,0,0,0.2), transparent),
+        radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,0.2), transparent) 100% 0;
+    background-repeat: no-repeat;
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+}
+
+/* Touch-optimized table cells */
+.table td,
+.table th {
+    padding: var(--spacing-sm) var(--spacing-xs);
+    vertical-align: middle;
+    
+    /* Prevent text from breaking weirdly */
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* Action buttons in tables */
+.btn-group-sm .btn {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: var(--spacing-xs);
+    margin: 2px;
+    
+    /* Better spacing for touch */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* =====================================================
+   MAP OPTIMIZATIONS
+   ===================================================== */
+
+#mapid,
+#overview_map {
+    /* Touch optimization */
+    touch-action: pan-x pan-y;
+    
+    /* Prevent text selection */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    /* Smooth interactions */
+    transition: height var(--transition-normal);
+}
+
+/* Leaflet control optimizations */
+.leaflet-control-container .leaflet-control {
+    margin: var(--spacing-sm);
+}
+
+.leaflet-bar a {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    line-height: var(--touch-target-min);
+    
+    /* Touch feedback */
+    transition: all var(--transition-fast);
+}
+
+.leaflet-bar a:active {
+    transform: scale(var(--touch-feedback-scale));
+}
+
+/* Enhanced popup styling */
+.leaflet-popup-content {
+    margin: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+}
+
+.leaflet-popup .btn {
+    min-height: var(--touch-target-min);
+    font-size: var(--font-size-xs);
+    padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+/* =====================================================
+   MODAL OPTIMIZATIONS
+   ===================================================== */
+
+.modal-dialog {
+    /* Better positioning on mobile */
+    margin: var(--spacing-md);
+    max-width: calc(100% - (var(--spacing-md) * 2));
+}
+
+.modal-content {
+    /* Safe area considerations */
+    max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - (var(--spacing-md) * 2));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-header .btn-close {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    padding: var(--spacing-sm);
+}
+
+/* =====================================================
+   FORM OPTIMIZATIONS
+   ===================================================== */
+
+/* Enhanced form layout for mobile */
+.form-floating {
+    position: relative;
+}
+
+.form-floating > label {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: var(--font-size-sm);
+}
+
+/* Better checkbox and radio styling */
+.form-check-input {
+    min-width: var(--touch-target-min);
+    min-height: var(--touch-target-min);
+    margin-top: 0;
+    
+    /* Center alignment */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-check {
+    padding-left: calc(var(--touch-target-min) + var(--spacing-sm));
+    min-height: var(--touch-target-min);
+    display: flex;
+    align-items: center;
+}
+
+.form-check-label {
+    margin-left: var(--spacing-sm);
+    line-height: 1.4;
+    font-size: var(--font-size-sm);
+    
+    /* Expand touch target */
+    padding: var(--spacing-sm) 0;
+}
+
+/* =====================================================
+   RESPONSIVE BREAKPOINT OPTIMIZATIONS
+   ===================================================== */
+
+/* Extra Small Devices (phones, 576px and down) */
+@media (max-width: 575.98px) {
+    :root {
+        --spacing-md: 0.75rem;
+        --spacing-lg: 1rem;
+    }
+    
+    .container,
+    .container-fluid {
+        padding-left: var(--spacing-sm);
+        padding-right: var(--spacing-sm);
+    }
+    
+    .card {
+        margin-bottom: var(--spacing-md);
+        border-radius: var(--spacing-sm);
+    }
+    
+    .btn {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .btn-lg {
+        min-height: var(--touch-target-large);
+        font-size: var(--font-size-base);
+        padding: var(--spacing-md) var(--spacing-lg);
+    }
+    
+    /* Single column layout for forms */
+    .row > [class*="col-"] {
+        margin-bottom: var(--spacing-md);
+    }
+    
+    /* Stacked button groups */
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        margin-bottom: var(--spacing-xs);
+        border-radius: var(--bs-border-radius) !important;
+    }
+    
+    /* Full-width tables on small screens */
+    .table-responsive table {
+        min-width: 600px;
+    }
+    
+    /* Larger map height on phones */
+    #mapid,
+    #overview_map {
+        height: 350px !important;
+        min-height: 300px;
+    }
+}
+
+/* Small Devices (landscape phones, tablets, 576px and up) */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .btn-group {
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+    }
+    
+    .btn-group .btn {
+        flex: 1 1 auto;
+        min-width: calc(50% - var(--spacing-xs));
+    }
+    
+    #mapid,
+    #overview_map {
+        height: 400px !important;
+    }
+}
+
+/* Medium Devices (tablets, 768px and up) */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .btn-group .btn {
+        min-width: auto;
+        flex: 0 1 auto;
+    }
+    
+    /* Enhanced table display */
+    .table td,
+    .table th {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    #mapid,
+    #overview_map {
+        height: 500px !important;
+    }
+}
+
+/* Large Devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    :root {
+        --touch-target-min: 40px;
+        --touch-target-recommended: 44px;
+    }
+    
+    /* Hover states for non-touch devices */
+    @media (hover: hover) and (pointer: fine) {
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+    }
+    
+    #mapid,
+    #overview_map {
+        height: 600px !important;
+    }
+}
+
+/* =====================================================
+   DEVICE-SPECIFIC OPTIMIZATIONS
+   ===================================================== */
+
+/* iPad specific optimizations */
+@media (min-width: 768px) and (max-width: 1024px) and (-webkit-min-device-pixel-ratio: 1) {
+    .navbar-nav {
+        flex-direction: row;
+    }
+    
+    .navbar-nav .nav-link {
+        margin: 0 var(--spacing-sm);
+    }
+    
+    /* Better modal sizing for iPad */
+    .modal-lg {
+        max-width: 90%;
+    }
+    
+    /* Optimized form layout */
+    .row.g-3 > * {
+        padding: var(--spacing-sm);
+    }
+}
+
+/* iPhone X+ safe area adjustments */
+@supports (padding: max(0px)) {
+    .navbar {
+        padding-left: max(var(--spacing-md), var(--safe-area-left));
+        padding-right: max(var(--spacing-md), var(--safe-area-right));
+    }
+    
+    .container,
+    .container-fluid {
+        padding-left: max(var(--spacing-md), var(--safe-area-left));
+        padding-right: max(var(--spacing-md), var(--safe-area-right));
+    }
+    
+    footer {
+        padding-bottom: max(var(--spacing-lg), var(--safe-area-bottom));
+    }
+}
+
+/* =====================================================
+   BROWSER-SPECIFIC OPTIMIZATIONS
+   ===================================================== */
+
+/* Chrome/Chromium browsers (Chrome, Edge, Brave, Opera) */
+@supports (-webkit-appearance: none) {
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    
+    /* Custom scrollbar for webkit browsers */
+    .table-responsive::-webkit-scrollbar {
+        height: 8px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f3f4;
+        border-radius: 4px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #dadce0;
+        border-radius: 4px;
+    }
+    
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #bdc1c6;
+    }
+}
+
+/* Firefox specific optimizations */
+@-moz-document url-prefix() {
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+    
+    /* Firefox scrollbar styling */
+    .table-responsive {
+        scrollbar-width: thin;
+        scrollbar-color: #dadce0 #f1f3f4;
+    }
+}
+
+/* Samsung Internet specific */
+@supports (-webkit-text-stroke: 1px transparent) {
+    .btn {
+        -webkit-text-stroke: 0.5px transparent;
+    }
+}
+
+/* =====================================================
+   ACCESSIBILITY ENHANCEMENTS
+   ===================================================== */
+
+/* Enhanced focus indicators for all devices */
+*:focus {
+    outline: 2px solid #0066cc;
+    outline-offset: 2px;
+}
+
+/* Skip to content link */
+.visually-hidden-focusable:focus {
+    position: fixed !important;
+    top: var(--safe-area-top);
+    left: var(--safe-area-left);
+    z-index: 9999;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: #000;
+    color: #fff;
+    text-decoration: none;
+    border-radius: var(--spacing-xs);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .btn {
+        border: 2px solid;
+    }
+    
+    .form-control,
+    .form-select {
+        border: 2px solid;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* =====================================================
+   PERFORMANCE OPTIMIZATIONS
+   ===================================================== */
+
+/* Hardware acceleration for smooth animations */
+.btn,
+.card,
+.modal,
+.navbar {
+    will-change: transform;
+    transform: translateZ(0);
+}
+
+/* Optimize repaints */
+.table-responsive {
+    contain: layout style paint;
+}
+
+/* Critical rendering optimization */
+.above-fold {
+    contain: layout style;
+}
+
+/* =====================================================
+   LOADING STATES
+   ===================================================== */
+
+/* Enhanced loading indicators for mobile */
+.spinner-border {
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    
+    /* Prevent interaction during loading */
+    touch-action: none;
+    pointer-events: auto;
+}
+
+/* =====================================================
+   PRINT OPTIMIZATIONS
+   ===================================================== */
+
+@media print {
+    /* Hide interactive elements */
+    .btn,
+    .navbar,
+    #mapid,
+    #overview_map,
+    .modal {
+        display: none !important;
+    }
+    
+    /* Optimize table printing */
+    .table {
+        border-collapse: collapse;
+    }
+    
+    .table td,
+    .table th {
+        border: 1px solid #000;
+        padding: var(--spacing-xs);
+        font-size: 10pt;
+    }
+    
+    /* Print-friendly colors */
+    .table-success {
+        background-color: #e8f5e8 !important;
+    }
+    
+    .table-danger {
+        background-color: #f8e8e8 !important;
+    }
+}
