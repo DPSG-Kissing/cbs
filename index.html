@@ -5,113 +5,345 @@
     <!-- Meta-Tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <meta name="description" content="CBS Tool - Christbaum-Sammlung der DPSG Kissing. Digitale Anmeldung für die jährliche Christbaum-Abholung.">
+    <meta name="keywords" content="Christbaum, Sammlung, DPSG, Kissing, Anmeldung, Pfadfinder">
+    <meta name="author" content="DPSG Kissing">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="CBS Tool - Christbaum-Sammlung DPSG Kissing">
+    <meta property="og:description" content="Digitale Anmeldung für die jährliche Christbaum-Sammlung">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://cbs.pfadfinder-kissing.de">
+    
+    <!-- Bootstrap CSS 5.3.6 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" 
+          integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" 
+          crossorigin="anonymous">
+    
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" 
+          crossorigin="anonymous">
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" 
+          integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" 
+          crossorigin="anonymous">
+    
     <!-- Custom Styles -->
     <link rel="stylesheet" href="css.css">
+    
     <!-- Favicon -->
     <link rel="icon" href="images/favicon-32x32.png" type="image/png">
+    <link rel="apple-touch-icon" href="images/apple-icon-180x180.png">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="js/leaflet-map-manager.js" as="script">
+    <link rel="preload" href="js/auth.js" as="script">
+    
+    <title>CBS Tool - Christbaum-Anmeldung | DPSG Kissing</title>
 </head>
-<nav class="navbar navbar-expand-lg navbar-dark bg-success">
-    <div class="container">
-        <a class="navbar-brand" href="index.html">CBS Tool</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Navigation umschalten">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-            <div class="navbar-nav">
-                <a class="nav-item nav-link active" href="index.html">Home</a>
-                <a class="nav-item nav-link" href="overview.html">Übersicht</a>
+
+<body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="visually-hidden-focusable">Zum Hauptinhalt springen</a>
+    
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success" role="navigation">
+        <div class="container">
+            <a class="navbar-brand" href="index.html" aria-label="CBS Tool Startseite">
+                <strong>CBS Tool</strong>
+                <small class="d-none d-md-inline ms-2">Christbaum-Sammlung</small>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" 
+                    aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Navigation umschalten">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link active" href="index.html" aria-current="page">
+                        <i class="bi bi-house-fill me-1" aria-hidden="true"></i>Anmeldung
+                    </a>
+                    <a class="nav-link" href="overview.html">
+                        <i class="bi bi-map-fill me-1" aria-hidden="true"></i>Übersicht
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="modalLabel">
+                        <i class="bi bi-shield-lock-fill me-2" aria-hidden="true"></i>
+                        Passwort erforderlich
+                    </h1>
+                </div>
+                <div class="modal-body">
+                    <form id="login" novalidate>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Passwort</label>
+                            <input type="password" class="form-control" id="password" 
+                                   aria-describedby="passwordHelp" required>
+                            <div id="passwordHelp" class="form-text">
+                                Bitte geben Sie das Passwort für den Zugriff auf das CBS Tool ein.
+                            </div>
+                            <div class="invalid-feedback">
+                                Bitte geben Sie ein gültiges Passwort ein.
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-key-fill me-2" aria-hidden="true"></i>
+                            Einloggen
+                        </button>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</nav>
-<div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Passwort erforderlich</h5>
-            </div>
-            <div class="modal-body">
-                <form id="login">
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Passwort</label>
-                        <input type="password" class="form-control" id="password" required>
+
+    <!-- Main Content -->
+    <main id="main-content" class="container mt-4" role="main">
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h1 class="card-title h2 text-success">
+                            <i class="bi bi-tree-fill me-2" aria-hidden="true"></i>
+                            Christbaum-Sammlung 2025
+                        </h1>
+                        <p class="card-text lead">
+                            Melden Sie Ihre Christbäume für die Abholung durch die DPSG Kissing an
+                        </p>
+                        <small class="text-muted">
+                            Alle Felder sind erforderlich • GPS-Koordinaten werden automatisch ermittelt
+                        </small>
                     </div>
-                    <button type="submit" class="btn btn-primary">Einloggen</button>
-                </form>
+                </div>
             </div>
         </div>
-    </div>
-</div>
-<div class="container mt-4">
-    <form id="check">
-        <!-- Eingabeformulare für Name, Telefonnummer, etc. -->
-        <div class="row">
-            <div class="col-md-6 mb-3">
-                <label for="name" class="form-label">Name</label>
-                <input type="text" class="form-control" id="name" placeholder="Mustermann" required>
+
+        <!-- Registration Form -->
+        <form id="check" novalidate>
+            <fieldset>
+                <legend class="visually-hidden">Persönliche Daten</legend>
+                
+                <!-- Personal Information Row -->
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">
+                            <i class="bi bi-person-fill me-1" aria-hidden="true"></i>
+                            Name <span class="text-danger" aria-label="Pflichtfeld">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="name" 
+                               placeholder="z.B. Max Mustermann" 
+                               aria-describedby="nameHelp" required>
+                        <div id="nameHelp" class="form-text">Vor- und Nachname für die Anmeldung</div>
+                        <div class="invalid-feedback">Bitte geben Sie einen gültigen Namen ein (mindestens 2 Zeichen).</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="telefonnummer" class="form-label">
+                            <i class="bi bi-telephone-fill me-1" aria-hidden="true"></i>
+                            Telefonnummer <span class="text-danger" aria-label="Pflichtfeld">*</span>
+                        </label>
+                        <input type="tel" class="form-control" id="telefonnummer" 
+                               placeholder="z.B. 08233 123456" 
+                               aria-describedby="phoneHelp" required>
+                        <div id="phoneHelp" class="form-text">Für Rückfragen zur Abholung</div>
+                        <div class="invalid-feedback">Bitte geben Sie eine gültige Telefonnummer ein.</div>
+                    </div>
+                    
+                    <div class="col-md-2 mb-3">
+                        <label for="cb_anzahl" class="form-label">
+                            <i class="bi bi-tree me-1" aria-hidden="true"></i>
+                            Anzahl Bäume <span class="text-danger" aria-label="Pflichtfeld">*</span>
+                        </label>
+                        <select id="cb_anzahl" class="form-select" aria-describedby="treesHelp" required>
+                            <option value="1" selected>1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                        <div id="treesHelp" class="form-text">Maximal 10 Bäume pro Anmeldung</div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend class="visually-hidden">Adresse und Bezahlung</legend>
+                
+                <!-- Address and Payment Row -->
+                <div class="row">
+                    <div class="col-md-8 mb-3">
+                        <label for="inputAddress" class="form-label">
+                            <i class="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>
+                            Adresse <span class="text-danger" aria-label="Pflichtfeld">*</span>
+                        </label>
+                        <input type="text" class="form-control" id="inputAddress" 
+                               placeholder="z.B. Hauptstraße 1, Kissing" 
+                               aria-describedby="addressHelp" required>
+                        <div id="addressHelp" class="form-text">
+                            Vollständige Adresse für die Abholung (Straße, Hausnummer, Ort)
+                        </div>
+                        <div class="invalid-feedback">Bitte geben Sie eine gültige Adresse ein.</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="inputMoney" class="form-label">
+                            <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>
+                            Bezahlt <span class="text-danger" aria-label="Pflichtfeld">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">€</span>
+                            <input type="number" step="0.01" min="0" max="999.99" 
+                                   class="form-control" id="inputMoney" 
+                                   placeholder="4,00" 
+                                   aria-describedby="moneyHelp" required>
+                        </div>
+                        <div id="moneyHelp" class="form-text">Bezahlter Betrag in Euro</div>
+                        <div class="invalid-feedback">Bitte geben Sie einen gültigen Betrag ein.</div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Submit Button -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <button type="submit" id="check_button" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-search me-2" aria-hidden="true"></i>
+                        Adresse überprüfen und fortfahren
+                    </button>
+                    <small class="form-text text-muted d-block mt-2 text-center">
+                        Ihre Adresse wird automatisch auf der Karte lokalisiert
+                    </small>
+                </div>
             </div>
-            <div class="col-md-4 mb-3">
-                <label for="telefonnummer" class="form-label">Telefonnummer</label>
-                <input type="text" class="form-control" id="telefonnummer" placeholder="08233123456" required>
-            </div>
-            <div class="col-md-2 mb-3">
-                <label for="cb_anzahl" class="form-label">Anzahl Bäume</label>
-                <select id="cb_anzahl" class="form-control">
-                    <option selected>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                </select>
+        </form>
+
+        <!-- Address Selection Results -->
+        <div id="proof" class="invisible mb-4" role="region" aria-live="polite" aria-label="Adressauswahl">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+
+        <!-- Map Container -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title h5 mb-0">
+                            <i class="bi bi-map me-2" aria-hidden="true"></i>
+                            Kartenansicht
+                        </h2>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="mapid" style="height: 450px; min-height: 300px;" 
+                             role="img" aria-label="Interaktive Karte zur Adressanzeige">
+                            <!-- Leaflet map will be initialized here -->
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- Eingabefeld für Adresse und Betrag -->
-        <div class="row">
-            <div class="col-md-8 mb-3">
-                <label for="inputAddress" class="form-label">Adresse</label>
-                <input type="text" class="form-control" id="inputAddress" placeholder="Hauptstraße 1" required>
+
+        <!-- Success Confirmation -->
+        <div id="confirmation" class="alert alert-success invisible" role="alert" aria-live="assertive">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-check-circle-fill me-2 fs-4" aria-hidden="true"></i>
+                <h2 class="alert-heading h4 mb-0">Anmeldung erfolgreich!</h2>
             </div>
-            <div class="col-md-4 mb-3">
-                <label for="inputMoney" class="form-label">Bezahlt</label>
-                <input type="number" step="0.01" class="form-control" id="inputMoney" placeholder="4,00" required>
+            <p class="mb-3">Die folgenden Daten wurden erfolgreich gespeichert:</p>
+            <ul id="confirmationDetails" class="mb-3">
+                <!-- Confirmation details will be inserted here -->
+            </ul>
+            <hr>
+            <p class="mb-0">
+                <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
+                Sie erhalten weitere Informationen zur Abholung per Telefon.
+            </p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-light mt-5 py-4" role="contentinfo">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3 class="h6 text-success">DPSG Kissing</h3>
+                    <p class="small text-muted mb-2">
+                        Deutsche Pfadfinderschaft Sankt Georg<br>
+                        Stamm Kissing
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="small text-muted mb-2">
+                        <i class="bi bi-envelope me-1" aria-hidden="true"></i>
+                        <a href="mailto:cbs@pfadfinder-kissing.de" class="text-decoration-none">
+                            cbs@pfadfinder-kissing.de
+                        </a>
+                    </p>
+                    <p class="small text-muted mb-0">
+                        <i class="bi bi-globe me-1" aria-hidden="true"></i>
+                        <a href="https://pfadfinder-kissing.de" class="text-decoration-none" target="_blank" rel="noopener">
+                            pfadfinder-kissing.de
+                        </a>
+                    </p>
+                </div>
             </div>
         </div>
-        <!-- Überprüfen Button -->
-        <button type="submit" id="check_button" class="btn btn-primary">Überprüfen</button>
-    </form>
-    <!-- Anzeige der Adressen zur Auswahl -->
-    <div id="proof" class="invisible mt-4"></div>
-    <!-- Karte zur Anzeige der Adresse -->
-    <div id="mapid" class="mt-4" style="height: 450px;"></div>
-    <!-- Bestätigungsmeldung -->
-    <div id="confirmation" class="alert alert-success mt-4 invisible" role="alert">
-        <h4 class="alert-heading">Bestätigung!</h4>
-        <p>Die folgenden Daten wurden erfolgreich gespeichert:</p>
-        <ul id="confirmationDetails">
-            <!-- Bestätigte Daten werden hier angezeigt -->
-        </ul>
-    </div>
-</div>
-<!-- Scripts -->
-<!-- Leaflet Core (bereits vorhanden) -->
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    </footer>
 
-<!-- Leaflet Plugins (bereits vorhanden) -->
-<script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+    <!-- Scripts -->
+    <!-- Bootstrap JavaScript 5.3.6 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js" 
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" 
+            crossorigin="anonymous"></script>
+    
+    <!-- Leaflet JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" 
+            crossorigin="anonymous"></script>
+    
+    <!-- Leaflet MarkerCluster JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" 
+            integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" 
+            crossorigin="anonymous"></script>
+    
+    <!-- CBS Map Manager (Custom) -->
+    <script src="js/leaflet-map-manager.js"></script>
+    
+    <!-- Authentication System -->
+    <script src="js/auth.js"></script>
+    
+    <!-- Registration Form Logic -->
+    <script src="js/anmeldung.js"></script>
 
-<!-- NEUE Datei: CBS Map Manager -->
-<script src="js/leaflet-map-manager.js"></script>
-
-<!-- Auth System (unverändert) -->
-<script src="js/auth.js"></script>
-
-<!-- Modernisierte Seitenlogik -->
-<script src="js/overview.js"></script> <!-- oder overview-modern.js -->
-<script src="js/anmeldung.js"></script> <!-- oder anmeldung-modern.js -->
+    <!-- Service Worker Registration (Progressive Web App) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
 </body>
 
 </html>
