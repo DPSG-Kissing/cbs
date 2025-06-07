@@ -51,44 +51,46 @@ function showLoginModal() {
         return;
     }
 
-    // BESSER - Mit Fokus-Management
-const modal = new bootstrap.Modal(modalElement, {
-    backdrop: 'static',
-    keyboard: false,
-    focus: true  // Automatisches Fokus-Management
-
-
-// Nach dem Öffnen
-modal.show();
-
-// Fokus auf Passwort-Feld setzen
-modalElement.addEventListener('shown.bs.modal', () => {
-    document.getElementById('password').focus();
-});
-
-    modal.show();
-
-    const loginForm = document.getElementById("login");
-    if (loginForm) {
-        loginForm.addEventListener("submit", async function(event) {
-            event.preventDefault(); // Verhindert Standard-Submit
-
-            const password = document.getElementById("password").value;
-            const passwordHash = await hash(password);
-
-            const isValid = await validatePasswordHash(passwordHash);
-            if (isValid) {
-                setCookie("password_hash", passwordHash, 1); // Speichert Hash als Cookie
-                modal.hide(); // Schließt das Modal
-            } else {
-                alert("Falsches Passwort. Bitte versuche es erneut.");
-            }
+    // Bootstrap 5 Modal initialisieren
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const modal = new bootstrap.Modal(modalElement, {
+            backdrop: 'static',
+            keyboard: false,
+            focus: true
         });
+
+        modal.show();
+
+        // Event Listener für das Formular
+        const loginForm = document.getElementById("login");
+        if (loginForm) {
+            // Entferne alte Event Listener
+            const newForm = loginForm.cloneNode(true);
+            loginForm.parentNode.replaceChild(newForm, loginForm);
+            
+            newForm.addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                const password = document.getElementById("password").value;
+                const passwordHash = await hash(password);
+
+                const isValid = await validatePasswordHash(passwordHash);
+                if (isValid) {
+                    setCookie("password_hash", passwordHash, 1);
+                    modal.hide();
+                    // Seite neu laden nach erfolgreichem Login
+                    window.location.reload();
+                } else {
+                    alert("Falsches Passwort. Bitte versuche es erneut.");
+                }
+            });
+        }
     } else {
-        console.error("Login-Formular nicht gefunden!");
+        console.error("Bootstrap Modal nicht verfügbar!");
+        // Fallback ohne Bootstrap
+        modalElement.style.display = 'block';
     }
 }
-
 
 // Validiert den Passwort-Hash beim Server
 async function validatePasswordHash(hash) {
