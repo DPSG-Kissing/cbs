@@ -132,6 +132,9 @@ body {
 
 /* Number input optimization */
 input[type="number"] {
+    /* Spinner in Firefox ausblenden */
+    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 /* Navigation Optimizations */
@@ -444,6 +447,12 @@ input[type="number"] {
     .table-responsive::-webkit-scrollbar-thumb:hover {
         background: #bdc1c6;
     }
+}
+
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;  /* Diese Zeile hinzufügen */
+    margin: 0;
 }
 
 /* Firefox specific */
