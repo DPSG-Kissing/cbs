@@ -1,16 +1,136 @@
+# Aktiviere Rewrite Engine
 RewriteEngine On
-RewriteCond %{SERVER_PORT} !=443
+
+# HTTPS Redirect - Verbesserte Version
+RewriteCond %{HTTPS} off
+RewriteCond %{HTTP:X-Forwarded-Proto} !https
 RewriteRule ^(.*)$ https://cbs.pfadfinder-kissing.de/$1 [R=301,L]
 
+# Security Headers
+<IfModule mod_headers.c>
+    # Verhindert Clickjacking
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Verhindert MIME-Type Sniffing
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # XSS Protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Content Security Policy (angepasst für Ihre Anwendung)
+    Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https://*.tile.openstreetmap.org https://raw.githubusercontent.com; connect-src 'self' https://api.openrouteservice.org; font-src 'self' https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'; form-action 'self';"
+    
+    # Strict Transport Security (HSTS)
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+    
+    # Permissions Policy
+    Header always set Permissions-Policy "geolocation=(self), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), speaker=(self)"
+</IfModule>
+
+# Kompression aktivieren
 <IfModule mod_deflate.c>
-AddOutputFilterByType DEFLATE text/plain
-AddOutputFilterByType DEFLATE text/html
-AddOutputFilterByType DEFLATE text/xml
-AddOutputFilterByType DEFLATE text/shtml
-AddOutputFilterByType DEFLATE text/css
-AddOutputFilterByType DEFLATE application/xml
-AddOutputFilterByType DEFLATE application/xhtml+xml
-AddOutputFilterByType DEFLATE application/rss+xml
-AddOutputFilterByType DEFLATE application/javascript
-AddOutputFilterByType DEFLATE application/x-javascript
-</IfModule> 
+    # Text-basierte Dateien komprimieren
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE text/javascript
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE application/ld+json
+    AddOutputFilterByType DEFLATE image/svg+xml
+    
+    # Kompression für ältere Browser
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+</IfModule>
+
+# Browser Caching
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpg "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/gif "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+    ExpiresByType image/ico "access plus 1 year"
+    ExpiresByType image/x-icon "access plus 1 year"
+    ExpiresByType application/pdf "access plus 1 month"
+    ExpiresByType text/html "access plus 1 hour"
+</IfModule>
+
+# Cache-Control Headers
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "public, max-age=3600"
+    </FilesMatch>
+</IfModule>
+
+# Sensitive Files blockieren
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql|conf)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# Backup und temporäre Dateien blockieren
+<FilesMatch "\.(bak|backup|swp|old|tmp)$">
+    Order Allow,Deny
+    Deny from all
+</FilesMatch>
+
+# PHP-Dateien in bestimmten Verzeichnissen blockieren (falls vorhanden)
+<Files "*.php">
+    <RequireAll>
+        Require all granted
+        Require not env blockPHP
+    </RequireAll>
+</Files>
+
+# Directory Browsing deaktivieren
+Options -Indexes
+
+# Server Signature verstecken
+ServerSignature Off
+
+# PHP Sicherheitseinstellungen (falls mod_php verwendet wird)
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+    php_flag expose_php Off
+    php_value upload_max_filesize 2M
+    php_value post_max_size 8M
+    php_value max_execution_time 30
+    php_value max_input_time 30
+    php_value memory_limit 128M
+</IfModule>
+
+# Hotlinking Protection für Bilder
+<IfModule mod_rewrite.c>
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?cbs\.pfadfinder-kissing\.de [NC]
+    RewriteCond %{REQUEST_URI} \.(gif|jpg|jpeg|png|svg)$ [NC]
+    RewriteRule \.(gif|jpg|jpeg|png|svg)$ - [F,L]
+</IfModule>
+
+# Rate Limiting für bestimmte Endpunkte (experimentell)
+<IfModule mod_rewrite.c>
+    # Backend API Rate Limiting
+    RewriteCond %{REQUEST_URI} ^/backend/
+    RewriteCond %{HTTP:X-Forwarded-For} ^(.*)$
+    RewriteRule ^(.*)$ - [E=CLIENT_IP:%1]
+    
+    # Weitere Rate-Limiting-Regeln können hier hinzugefügt werden
+</IfModule>
