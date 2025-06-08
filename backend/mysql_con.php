@@ -15,7 +15,8 @@ $dbname = "cbsammlung";
 // Verbindungsoptionen für erhöhte Sicherheit
 $options = [
     MYSQLI_OPT_CONNECT_TIMEOUT => 5,
-    MYSQLI_INIT_COMMAND => "SET sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'",
+    // KORRIGIERT: NO_AUTO_CREATE_USER entfernt
+    MYSQLI_INIT_COMMAND => "SET sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
     MYSQLI_OPT_SSL_VERIFY_SERVER_CERT => true,
 ];
 
@@ -45,16 +46,18 @@ try {
     $conn->query("SET time_zone = '+01:00'");
     
     // Aktiviere strikte SQL-Modi für bessere Datenintegrität
-    $conn->query("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'");
+    // KORRIGIERT: NO_AUTO_CREATE_USER entfernt
+    $conn->query("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
     
-} // Durch diesen neuen Block für das Debugging:
- catch (Exception $e) {
-    // -- TEMPORÄRE ÄNDERUNG FÜR DEBUGGING --
-    // Zeige den echten Fehler an, anstatt der generischen Nachricht.
-    http_response_code(500); // Setze einen Fehlerstatus für den Browser
-    echo "Ein unerwarteter Fehler ist in mysql_con.php aufgetreten: <br><br>";
-    echo "<strong style='color:red;'>Genaue Fehlermeldung:</strong> " . $e->getMessage();
-    exit; // Beende das Skript hier, damit wir den Fehler sehen
+} catch (Exception $e) {
+    // Log den Fehler (in Produktion sollte das in eine Log-Datei geschrieben werden)
+    if (getenv('ENVIRONMENT') === 'development') {
+        error_log("Database connection error: " . $e->getMessage());
+        die("Datenbankverbindung fehlgeschlagen. Bitte versuchen Sie es später erneut.");
+    } else {
+        // In Produktion keine Details preisgeben
+        die("Service temporär nicht verfügbar. Bitte versuchen Sie es später erneut.");
+    }
 }
 
 // Funktion für sichere Datenbankabfragen
