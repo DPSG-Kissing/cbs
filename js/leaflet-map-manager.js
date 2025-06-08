@@ -1,156 +1,7 @@
 /**
  * CBS Leaflet Map Manager
  * Moderne Karten-Verwaltung für das Christbaum-Sammlung Tool
- *  * Version: 2.0.0
- {
-    background: white;
-    border-radius: 8px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow: auto;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-.cbs-layer-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.cbs-layer-modal-header h3 {
-    margin: 0;
-    font-size: 1.25rem;
-}
-
-.cbs-layer-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #6c757d;
-}
-
-.cbs-layer-modal-body {
-    padding: 16px;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 12px;
-}
-
-.cbs-layer-option {
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
-    padding: 8px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
-}
-
-.cbs-layer-option:hover {
-    border-color: #0d6efd;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-}
-
-.cbs-layer-option.active {
-    border-color: #0d6efd;
-    background: #e7f3ff;
-}
-
-.cbs-layer-preview {
-    width: 100%;
-    height: 60px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    background-color: #f8f9fa;
-}
-
-.cbs-layer-name {
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-
-.cbs-tooltip {
-    background: rgba(0,0,0,0.8);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.875rem;
-    padding: 4px 8px;
-}
-
-@media (max-width: 768px) {
-    .cbs-popup-actions {
-        flex-direction: column;
-    }
-    
-    .cbs-layer-modal-body {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-`;
-
-// Export the CBSMapManager class
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CBSMapManager;
-} else if (typeof window !== 'undefined') {
-    window.CBSMapManager = CBSMapManager;
-}
-
-/**
- * Usage Example:
- * 
- * // Initialize the map
- * const mapManager = new CBSMapManager({
- *     enableGeolocation: true,
- *     enableClustering: true,
- *     enableRouting: true,
- *     tileProvider: 'osm'
- * });
- * 
- * // Initialize map in container
- * await mapManager.init('mapid');
- * 
- * // Add event listeners
- * mapManager.on('statusChange', (data) => {
- *     console.log('Status change requested:', data);
- *     // Handle status change API call
- * });
- * 
- * mapManager.on('locationFound', (data) => {
- *     console.log('User location found:', data.latlng);
- * });
- * 
- * // Add markers
- * const markerData = {
- *     id: 1,
- *     name: 'Max Mustermann',
- *     strasse: 'Hauptstraße 1',
- *     telefonnummer: '08233123456',
- *     cb_anzahl: 2,
- *     geld: 8.00,
- *     status: 0,
- *     lat: 48.303808,
- *     lng: 10.974612
- * };
- * 
- * mapManager.addMarker(
- *     markerData.lat, 
- *     markerData.lng, 
- *     markerData
- * );
- * 
- * // Start location tracking
- * mapManager.startLocationTracking();
- * 
- * // Fit map to all markers
- * mapManager.fitToMarkers();
- */0.0
+ * Version: 2.0.0
  * 
  * Features:
  * - Multi-Provider Tile Support
@@ -941,6 +792,19 @@ class CBSMapManager {
     }
 
     /**
+     * Cache tile for offline support
+     */
+    async cacheTile(url) {
+        if (this.tileCache) {
+            try {
+                await this.tileCache.add(url);
+            } catch (error) {
+                // Silently fail if caching fails
+            }
+        }
+    }
+
+    /**
      * Destroy map instance
      */
     destroy() {
@@ -953,98 +817,9 @@ class CBSMapManager {
     }
 }
 
-// CSS for custom map styles (should be added to your CSS file)
-const mapStyles = `
-.cbs-cluster {
-    background: linear-gradient(135deg, #eb8d00, #ff6b35);
-    border: 3px solid #ffffff;
-    border-radius: 50%;
-    color: white;
-    font-weight: bold;
-    text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    transition: all 0.2s ease;
+// Export the CBSMapManager class
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = CBSMapManager;
+} else if (typeof window !== 'undefined') {
+    window.CBSMapManager = CBSMapManager;
 }
-
-.cbs-cluster:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-}
-
-.cbs-cluster-small { width: 30px; height: 30px; font-size: 12px; }
-.cbs-cluster-medium { width: 40px; height: 40px; font-size: 14px; }
-.cbs-cluster-large { width: 50px; height: 50px; font-size: 16px; }
-
-.cbs-cluster-inner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-}
-
-.cbs-marker {
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-    transition: all 0.2s ease;
-}
-
-.cbs-marker:hover {
-    transform: scale(1.1);
-    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
-}
-
-.cbs-popup-content {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.cbs-popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.cbs-popup-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.cbs-popup-actions .btn {
-    flex: 1;
-    font-size: 0.875rem;
-}
-
-.cbs-layer-control {
-    background: white;
-    border-radius: 4px;
-    box-shadow: 0 1px 5px rgba(0,0,0,0.4);
-}
-
-.cbs-layer-control a {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    color: #333;
-    font-size: 16px;
-}
-
-.cbs-layer-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-}
-
-.
