@@ -92,4 +92,7 @@ function closeConnection($conn) {
 register_shutdown_function(function() use ($conn) {
     closeConnection($conn);
 });
+
+// Setze Umgebungsvariable für Entwicklung
+putenv('ENVIRONMENT=development');
 ?>
