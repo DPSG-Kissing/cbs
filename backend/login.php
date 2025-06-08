@@ -52,22 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Passwort-Hash aus Datenbank laden
     $correctHash = getPasswordHashFromDB($conn);
     
-    // =================================================================
-    // START: Temporärer Debug-Code (später wieder löschen)
-    // =================================================================
-    http_response_code(418); // Gibt einen ungewöhnlichen Fehlercode aus, damit wir ihn leicht finden
-    // Der Content-Type Header wurde oben schon gesetzt, hier zur Sicherheit nochmal
-    header('Content-Type: application/json; charset=utf-8'); 
-    echo json_encode([
-        'debug_info' => 'Vergleiche die folgenden zwei Hash-Werte:',
-        'hash_vom_frontend_gesendet' => $inputHash,
-        'hash_aus_der_datenbank' => $correctHash,
-        'sind_identisch' => hash_equals((string)$correctHash, (string)$inputHash)
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-    exit;
-    // =================================================================
-    // ENDE: Temporärer Debug-Code
-    // =================================================================
+    
 
     // Der folgende Code wird durch den "exit;" im Debug-Block nicht erreicht,
     // bleibt aber für später erhalten.
