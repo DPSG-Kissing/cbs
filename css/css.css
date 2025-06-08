@@ -584,3 +584,31 @@ input[type="number"]::-webkit-inner-spin-button {
         background-color: #f8e8e8 !important;
     }
 }
+
+/* =====================================================
+   ZUSÄTZE FÜR ECHTZEIT-SYNCHRONISATION
+   ===================================================== */
+
+/* Animations-Klasse für das rotierende Icon */
+.bi-spin {
+    -webkit-animation: bi-spin 1.5s infinite linear;
+    animation: bi-spin 1.5s infinite linear;
+}
+
+@-webkit-keyframes bi-spin {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes bi-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
