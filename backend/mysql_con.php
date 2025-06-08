@@ -9,7 +9,7 @@ if (getenv('ENVIRONMENT') !== 'development') {
 // WICHTIG: Diese Werte sollten in einer sicheren Umgebungsvariable oder Config-Datei stehen!
 $servername = "127.0.0.1";
 $username = "cbsammlung";
-$password = "Ca0WGf7gnjtF4TuAP6yz"; // TODO: In Umgebungsvariable verschieben
+$password = "ZZTTrs2rTQpJl5OmUPFv"; // TODO: In Umgebungsvariable verschieben
 $dbname = "cbsammlung";
 
 // Verbindungsoptionen für erhöhte Sicherheit
