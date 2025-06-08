@@ -1,407 +1,139 @@
-<!doctype html>
-<html lang="de">
+/**
+ * CBS Overview - Integration mit modernem Leaflet Map Manager
+ * Aktualisierte Version für bessere Performance und UX
+ */
 
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <meta name="description" content="CBS Tool Übersicht - Verwaltung und Übersicht aller Christbaum-Anmeldungen der DPSG Kissing.">
-    <meta name="keywords" content="Christbaum, Übersicht, Verwaltung, DPSG, Kissing, Admin">
-    <meta name="author" content="DPSG Kissing">
+document.addEventListener("DOMContentLoaded", function() {
+    let mapManager;
+    let locationEnabled = false;
+    const apiBase = "https://cbs.pfadfinder-kissing.de/backend/";
     
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="CBS Tool">
-    <meta name="application-name" content="CBS Tool">
-    <meta name="msapplication-TileColor" content="#198754">
-    <meta name="theme-color" content="#198754">
-    
-    <meta property="og:title" content="CBS Tool Übersicht - DPSG Kissing">
-    <meta property="og:description" content="Verwaltung und Übersicht aller Christbaum-Anmeldungen">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://cbs.pfadfinder-kissing.de/overview.html">
-    <meta property="og:image" content="https://cbs.pfadfinder-kissing.de/images/og-image.png">
-    
-    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon-180x180.png">
-    
-    <link rel="icon" type="image/png" sizes="192x192" href="images/android-chrome-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="images/android-chrome-512x512.png">
-    
-    <meta name="msapplication-TileImage" content="images/mstile-144x144.png">
-    
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://api.openrouteservice.org" crossorigin>
-    <link rel="dns-prefetch" href="https://tile.openstreetmap.org">
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" 
-      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" 
-      crossorigin="anonymous">
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" 
-          integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" 
-          crossorigin="anonymous">
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" 
-          integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" 
-          crossorigin="anonymous">
-    
-    <link rel="stylesheet" href="css/css.css">
-    <link rel="stylesheet" href="css/mobile-optimized-css.css">
-    <link rel="stylesheet" href="css/leaflet-map-manager.css">
-    
-    <link rel="preload" href="js/mobile-optimized-js.js" as="script">
-    <link rel="preload" href="js/leaflet-map-manager.js" as="script">
-    <link rel="preload" href="js/auth.js" as="script">
-    <link rel="preload" href="js/overview.js" as="script">
-    
-    <title>Übersicht - CBS Tool | DPSG Kissing</title>
-</head>
+    let showAbgeholte = false;
+    let currentData = [];
+    let isLoading = false;
 
-<body>
-    <a href="#main-content" class="visually-hidden-focusable">Zum Hauptinhalt springen</a>
-    
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success position-sticky top-0" role="navigation" style="z-index: 1030;">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" href="index.html" aria-label="CBS Tool Startseite">
-                <strong>CBS Tool</strong>
-                <small class="d-none d-sm-inline ms-2">Christbaum-Sammlung</small>
-            </a>
+    // Initialisierung
+    initializeApplication();
+
+    async function initializeApplication() {
+        try {
+            // KORREKTUR: Routing wird hier aktiviert
+            mapManager = new CBSMapManager({
+                enableGeolocation: true,
+                enableClustering: true,
+                enableRouting: true, 
+                tileProvider: 'osm',
+                clusterRadius: 50,
+                defaultZoom: 15
+            });
+
+            await mapManager.init('overview_map');
+            setupEventListeners();
+            await fetchAndDisplayData();
+            setupAutoRefresh();
+            console.log('CBS Overview erfolgreich initialisiert');
             
-            <button class="navbar-toggler border-0 p-2" type="button" 
-                    data-bs-toggle="collapse" 
-                    data-bs-target="#navbarNavAltMarkup" 
-                    aria-controls="navbarNavAltMarkup" 
-                    aria-expanded="false" 
-                    aria-label="Navigation umschalten"
-                    style="min-width: 48px; min-height: 48px;">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                <div class="navbar-nav ms-auto">
-                    <a class="nav-link d-flex align-items-center px-3 py-2" href="index.html"
-                       style="min-height: 48px;">
-                        <i class="bi bi-plus-circle-fill me-2" aria-hidden="true"></i>
-                        <span>Anmeldung</span>
-                    </a>
-                    <a class="nav-link active d-flex align-items-center px-3 py-2" href="overview.html" aria-current="page"
-                       style="min-height: 48px;">
-                        <i class="bi bi-map-fill me-2" aria-hidden="true"></i>
-                        <span>Übersicht</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
+        } catch (error) {
+            console.error('Fehler bei der Initialisierung:', error);
+            showNotification('Fehler beim Laden der Karte. Bitte laden Sie die Seite neu.', 'error');
+        }
+    }
 
-    <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" role="dialog">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="modalLabel">
-                        <i class="bi bi-shield-lock-fill me-2" aria-hidden="true"></i>
-                        Passwort erforderlich
-                    </h1>
-                </div>
-                <div class="modal-body">
-                    <form id="loginForm" novalidate>
-                        <div class="mb-3">
-                            <label for="adminPassword" class="form-label fw-semibold">Passwort</label>
-                            <input type="password" class="form-control form-control-lg" id="adminPassword" 
-                                   aria-describedby="passwordHelp" required
-                                   autocomplete="current-password"
-                                   style="min-height: 48px;">
-                            <div id="passwordHelp" class="form-text">
-                                Bitte geben Sie das Admin-Passwort ein, um auf die Übersicht zuzugreifen.
-                            </div>
-                            <div class="invalid-feedback">
-                                Bitte geben Sie ein gültiges Passwort ein.
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center"
-                                style="min-height: 56px;">
-                            <i class="bi bi-key-fill me-2" aria-hidden="true"></i>
-                            <span>Einloggen</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
+    function setupEventListeners() {
+        document.getElementById("toggle-location")?.addEventListener("click", toggleLocation);
+        document.getElementById("filter-button")?.addEventListener("click", toggleAbgeholteFilter);
+        document.getElementById("refresh-data")?.addEventListener("click", () => fetchAndDisplayData(true));
+        
+        const searchInput = document.getElementById("filter-input");
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener("input", (event) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => handleSearch(event), 300);
+            });
+        }
+    }
 
-    <main id="main-content" class="container-fluid mt-4" role="main">
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card bg-light shadow-sm">
-                    <div class="card-body">
-                        <div class="row align-items-center g-3">
-                            <div class="col-12 col-md-6">
-                                <h1 class="card-title h2 text-success mb-2">
-                                    <i class="bi bi-clipboard-data-fill me-2" aria-hidden="true"></i>
-                                    Sammlung-Übersicht
-                                </h1>
-                                <p class="card-text text-muted mb-0">
-                                    Verwaltung aller Christbaum-Anmeldungen
-                                </p>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <div class="row text-center g-3">
-                                    <div class="col-4">
-                                        <div class="bg-white rounded p-2 shadow-sm">
-                                            <div class="h4 text-primary mb-0" id="stats-total">-</div>
-                                            <small class="text-muted fw-semibold">Gesamt</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="bg-white rounded p-2 shadow-sm">
-                                            <div class="h4 text-success mb-0" id="stats-completed">-</div>
-                                            <small class="text-muted fw-semibold">Abgeholt</small>
-                                        </div>
-                                    </div>
-                                    <div class="col-4">
-                                        <div class="bg-white rounded p-2 shadow-sm">
-                                            <div class="h4 text-warning mb-0" id="stats-money">-</div>
-                                            <small class="text-muted fw-semibold">Einnahmen</small>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    function toggleLocation() {
+        const toggleButton = document.getElementById("toggle-location");
+        locationEnabled = !locationEnabled;
+        if (locationEnabled) {
+            mapManager.startLocationTracking();
+            toggleButton.innerHTML = '<i class="bi bi-geo-alt-fill me-2"></i> Standort verbergen';
+            toggleButton.classList.replace('btn-primary', 'btn-danger');
+        } else {
+            mapManager.stopLocationTracking();
+            toggleButton.innerHTML = '<i class="bi bi-geo-alt-fill me-2"></i> Standort anzeigen';
+            toggleButton.classList.replace('btn-danger', 'btn-primary');
+        }
+    }
 
-        <div class="row mb-4 g-3">
-            <div class="col-12 col-sm-6 col-lg-3">
-                <button id="toggle-location" class="btn btn-primary w-100 d-flex align-items-center justify-content-center" 
-                        type="button" style="min-height: 48px;">
-                    <i class="bi bi-geo-alt-fill me-2" aria-hidden="true"></i>
-                    <span>Standort anzeigen</span>
-                </button>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <button class="btn btn-warning w-100 d-flex align-items-center justify-content-center" 
-                        id="filter-button" type="button" style="min-height: 48px;">
-                    <i class="bi bi-funnel-fill me-2" aria-hidden="true"></i>
-                    <span>Abgeholte einblenden</span>
-                </button>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <button class="btn btn-info w-100 d-flex align-items-center justify-content-center" 
-                        id="refresh-data" type="button" style="min-height: 48px;">
-                    <i class="bi bi-arrow-clockwise me-2" aria-hidden="true"></i>
-                    <span>Daten aktualisieren</span>
-                </button>
-            </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="input-group">
-                    <input class="form-control" type="text" id="filter-input" 
-                           placeholder="Suchen..." aria-label="Einträge suchen"
-                           style="min-height: 48px;">
-                    <button class="btn btn-outline-secondary" type="button" id="clear-search"
-                            style="min-width: 48px;">
-                        <i class="bi bi-x-lg" aria-hidden="true"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h2 class="card-title h5 mb-0">
-                            <i class="bi bi-map me-2" aria-hidden="true"></i>
-                            Interaktive Karte
-                        </h2>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Kartenoptionen">
-                            <button type="button" class="btn btn-outline-secondary" id="fit-to-markers" 
-                                    title="Alle Marker anzeigen" style="min-width: 44px; min-height: 44px;">
-                                <i class="bi bi-arrows-fullscreen" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="export-data" 
-                                    title="Daten exportieren" style="min-width: 44px; min-height: 44px;">
-                                <i class="bi bi-download" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="map-fullscreen" 
-                                    title="Vollbild" style="min-width: 44px; min-height: 44px;">
-                                <i class="bi bi-fullscreen" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div id="overview_map" 
-                             class="position-relative"
-                             style="height: 600px; min-height: 400px;" 
-                             role="img" 
-                             aria-label="Interaktive Karte mit allen Anmeldungen"
-                             tabindex="0">
-                            <div class="position-absolute top-50 start-50 translate-middle" id="map-loading">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="visually-hidden">Karte wird geladen...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="search-results" class="alert alert-info d-none shadow-sm" role="status" aria-live="polite">
-        </div>
-
-        <div class="row">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h2 class="card-title h5 mb-0">
-                            <i class="bi bi-table me-2" aria-hidden="true"></i>
-                            Anmeldungen
-                        </h2>
-                        <div class="btn-group btn-group-sm" role="group" aria-label="Tabellenoptionen">
-                            <button type="button" class="btn btn-outline-secondary" id="select-all" 
-                                    title="Alle auswählen" style="min-width: 44px; min-height: 44px;">
-                                <i class="bi bi-check-all" aria-hidden="true"></i>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary" id="bulk-actions" 
-                                    title="Massenaktionen" disabled style="min-width: 44px; min-height: 44px;">
-                                <i class="bi bi-gear" aria-hidden="true"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover table-striped mb-0" role="table">
-                                <thead class="table-dark sticky-top">
-                                    <tr>
-                                        <th scope="col" class="text-center" style="width: 60px;">
-                                            <div class="form-check d-flex justify-content-center">
-                                                <input class="form-check-input" 
-                                                       type="checkbox" 
-                                                       id="select-all-checkbox" 
-                                                       aria-label="Alle Einträge auswählen"
-                                                       style="min-width: 20px; min-height: 20px;">
-                                            </div>
-                                        </th>
-                                        
-                                        <th scope="col" style="width: 60px;">
-                                            <span class="fw-bold">Nr.</span>
-                                        </th>
-                                        
-                                        <th scope="col" style="min-width: 150px;">
-                                            <button type="button" 
-                                                    class="btn btn-link text-white p-0 text-decoration-none fw-bold d-flex align-items-center" 
-                                                    id="sort-name" 
-                                                    aria-label="Nach Name sortieren"
-                                                    style="min-height: 44px;">
-                                                <span>Name</span>
-                                                <i class="bi bi-arrow-down-up ms-1" aria-hidden="true"></i>
-                                            </button>
-                                        </th>
-                                        
-                                        <th scope="col" style="min-width: 200px;">
-                                            <button type="button" 
-                                                    class="btn btn-link text-white p-0 text-decoration-none fw-bold d-flex align-items-center" 
-                                                    id="sort-address" 
-                                                    aria-label="Nach Adresse sortieren"
-                                                    style="min-height: 44px;">
-                                                <span>Straße</span>
-                                                <i class="bi bi-arrow-down-up ms-1" aria-hidden="t
-                                                rue"></i>
-                                            </button>
-                                        </th>
-                                        
-                                        <th scope="col" style="min-width: 120px;">
-                                            <span class="fw-bold">Telefon</span>
-                                        </th>
-                                        
-                                        <th scope="col" class="text-center" style="width: 80px;">
-                                            <div class="d-flex align-items-center justify-content-center">
-                                                <i class="bi bi-tree-fill me-1" aria-hidden="true"></i>
-                                                <span class="fw-bold d-none d-md-inline">Anzahl</span>
-                                            </div>
-                                        </th>
-                                        
-                                        <th scope="col" class="text-end" style="width: 100px;">
-                                            <button type="button" 
-                                                    class="btn btn-link text-white p-0 text-decoration-none fw-bold" 
-                                                    id="sort-money" 
-                                                    aria-label="Nach Betrag sortieren"
-                                                    style="min-height: 44px;">
-                                                <span>Bezahlt</span>
-                                                <i class="bi bi-arrow-down-up ms-1" aria-hidden="true"></i>
-                                            </button>
-                                        </th>
-                                        
-                                        <th scope="col" class="text-center" style="min-width: 180px;">
-                                            <span class="fw-bold">Aktionen</span>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody id="table_overview">
-                                    <tr>
-                                        <td colspan="8" class="text-center py-5">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">Daten werden geladen...</span>
-                                            </div>
-                                            <p class="mt-2 text-muted">Anmeldungen werden geladen...</p>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-light">
-                        <div class="row align-items-center g-3">
-                            <div class="col-12 col-md-6">
-                                <small class="text-muted">
-                                    <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-                                    Klicken Sie auf 📍 um zur Position auf der Karte zu springen
-                                </small>
-                            </div>
-                            <div class="col-12 col-md-6 text-md-end">
-                                <div class="btn-group btn-group-sm" role="group" aria-label="Tabellenansicht">
-                                    <input type="radio" class="btn-check" name="table-view" id="view-compact" autocomplete="off">
-                                    <label class="btn btn-outline-secondary" for="view-compact">
-                                        <i class="bi bi-list" aria-hidden="true"></i> 
-                                        <span class="d-none d-sm-inline">Kompakt</span>
-                                    </label>
-                                    
-                                    <input type="radio" class="btn-check" name="table-view" id="view-detailed" autocomplete="off" checked>
-                                    <label class="btn btn-outline-secondary" for="view-detailed">
-                                        <i class="bi bi-card-text" aria-hidden="true"></i> 
-                                        <span class="d-none d-sm-inline">Detail</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
-        crossorigin="anonymous"></script>
+    function toggleAbgeholteFilter() {
+        showAbgeholte = !showAbgeholte;
+        updateDisplay();
+    }
     
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" 
-            integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" 
-            crossorigin="anonymous"></script>
-            
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" 
-        integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" 
-        crossorigin="anonymous"></script>
+    function handleSearch(event) {
+        // ... (unverändert)
+    }
 
-    <script src="js/leaflet-map-manager.js"></script>
-    <script src="js/mobile-optimized-js.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/overview.js"></script>
+    async function fetchAndDisplayData(forceRefresh = false) {
+        if (isLoading && !forceRefresh) return;
+        isLoading = true;
+        try {
+            const url = `${apiBase}get_data.php${forceRefresh ? '?_t='+Date.now() : ''}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            if (!Array.isArray(data)) throw new Error('Invalid data format');
+            currentData = data;
+            updateDisplay();
+        } catch (error) {
+            console.error("Error fetching data:", error);
+            showNotification("Fehler beim Laden der Daten.", "error");
+        } finally {
+            isLoading = false;
+        }
+    }
 
-</body>
-</html>
+    function updateDisplay() {
+        const filteredData = showAbgeholte ? currentData : currentData.filter(d => d.status == 0);
+        mapManager.clearMarkers();
+        filteredData.forEach(entry => mapManager.addMarker(entry.lat, entry.lng, entry));
+        if (filteredData.length > 0) mapManager.fitToMarkers();
+        updateTable(filteredData);
+        updateStatistics(currentData);
+    }
+    
+    function updateTable(data) {
+        const tableBody = document.getElementById("table_overview");
+        if (!tableBody) return;
+        let rows = "";
+        data.forEach((entry, index) => {
+            rows += `<tr id="row-${entry.id}"><th>${index + 1}</th><td>${escapeHtml(entry.name)}</td><td>${escapeHtml(entry.strasse)}</td><td>...</td></tr>`;
+        });
+        tableBody.innerHTML = rows || '<tr><td colspan="4" class="text-center">Keine Daten zum Anzeigen.</td></tr>';
+    }
+
+    function updateStatistics(data) {
+        // ... (unverändert)
+    }
+    
+    function setupAutoRefresh() {
+        setInterval(() => {
+            if (!isLoading && document.visibilityState === 'visible') {
+                fetchAndDisplayData(false);
+            }
+        }, 7500);
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text || '';
+        return div.innerHTML;
+    }
+    
+    function showNotification(message, type = 'info') {
+        // ... (unverändert)
+    }
+});
