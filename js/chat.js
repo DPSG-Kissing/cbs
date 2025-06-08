@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusBadge = document.getElementById('chat-status');
 
     // --- WebSocket-Verbindung ---
-    const conn = new WebSocket('ws://cbs.pfadfinder-kissing.de:8080'); // WICHTIG: Domain anpassen!
+    const conn = new WebSocket('ws://cbs.pfadfinder-kissing.de:8583'); // WICHTIG: Domain anpassen!
 
     conn.onopen = function(e) {
         console.log("Verbindung zum Chat-Server hergestellt!");
