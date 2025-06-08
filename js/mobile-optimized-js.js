@@ -93,7 +93,7 @@ class CBSMobileOptimizer {
         };
         
         setVH();
-        window.addEventListener('resize', debounce(setVH, 100));
+        window.addEventListener('resize', this.debounce(setVH, 100));
         window.addEventListener('orientationchange', () => {
             setTimeout(setVH, 100);
         });
@@ -158,6 +158,91 @@ class CBSMobileOptimizer {
             
             // Visual feedback
             this.addRippleEffect(target, e.touches[0]);
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            if (this.activeElement) {
+                this.activeElement.classList.remove('touch-active');
+                this.activeElement = null;
+            }
+        }, { passive: true });
+
+        document.addEventListener('touchcancel', () => {
+            if (this.activeElement) {
+                this.activeElement.classList.remove('touch-active');
+                this.activeElement = null;
+            }
+        }, { passive: true });
+    }
+
+    /**
+     * Ripple-Effekt für Touch-Feedback
+     */
+    addRippleEffect(element, touch) {
+        const rect = element.getBoundingClientRect();
+        const ripple = document.createElement('div');
+        
+        const size = Math.max(rect.width, rect.height);
+        const x = touch.clientX - rect.left - size / 2;
+        const y = touch.clientY - rect.top - size / 2;
+        
+        ripple.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            left: ${x}px;
+            top: ${y}px;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: ripple 0.6s ease-out;
+            z-index: 1;
+        `;
+        
+        element.style.position = 'relative';
+        element.style.overflow = 'hidden';
+        element.appendChild(ripple);
+        
+        setTimeout(() => {
+            if (ripple.parentNode) {
+                ripple.parentNode.removeChild(ripple);
+            }
+        }, 600);
+    }
+
+    /**
+     * Versehentliche Touches verhindern
+     */
+    preventAccidentalTouches() {
+        let lastTouchTime = 0;
+        const minTouchInterval = 100; // ms
+        
+        document.addEventListener('touchstart', (e) => {
+            const now = Date.now();
+            if (now - lastTouchTime < minTouchInterval) {
+                e.preventDefault();
+                return;
+            }
+            lastTouchTime = now;
+            
+            this.touchStartCoords = {
+                x: e.touches[0].clientX,
+                y: e.touches[0].clientY,
+                time: now
+            };
+        }, { passive: false });
+
+        // Prevent accidental clicks during scroll
+        document.addEventListener('touchmove', (e) => {
+            if (!this.touchStartCoords) return;
+            
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - this.touchStartCoords.x);
+            const deltaY = Math.abs(touch.clientY - this.touchStartCoords.y);
+            
+            if (deltaX > 10 || deltaY > 10) {
+                this.isScrolling = true;
+            }
         }, { passive: true });
 
         document.addEventListener('touchend', (e) => {
@@ -362,7 +447,7 @@ class CBSMobileOptimizer {
         const validationInputs = document.querySelectorAll('input[required], select[required], textarea[required]');
         
         validationInputs.forEach(input => {
-            const validateInput = debounce(() => {
+            const validateInput = this.debounce(() => {
                 this.validateField(input);
             }, 500);
 
@@ -722,6 +807,38 @@ class CBSMobileOptimizer {
     }
 
     /**
+     * Chromium-spezifische Optimierungen
+     */
+    setupChromiumOptimizations() {
+        // Chrome-specific optimizations
+        document.body.classList.add('browser-chrome');
+    }
+
+    /**
+     * Firefox-spezifische Optimierungen
+     */
+    setupFirefoxOptimizations() {
+        // Firefox-specific optimizations
+        document.body.classList.add('browser-firefox');
+    }
+
+    /**
+     * Safari-spezifische Optimierungen
+     */
+    setupSafariOptimizations() {
+        // Safari-specific optimizations
+        document.body.classList.add('browser-safari');
+    }
+
+    /**
+     * Samsung Internet-spezifische Optimierungen
+     */
+    setupSamsungInternetOptimizations() {
+        // Samsung Internet-specific optimizations
+        document.body.classList.add('browser-samsung');
+    }
+
+    /**
      * iOS-spezifische Optimierungen
      */
     initIOSOptimizations() {
@@ -818,125 +935,31 @@ class CBSMobileOptimizer {
     logDeviceInfo() {
         console.log('CBS Mobile Optimizer initialized for:', this.deviceInfo);
     }
-}
 
-/**
- * Utility Functions
- */
-
-// Debounce function
-function debounce(func, wait, immediate) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            timeout = null;
-            if (!immediate) func(...args);
+    /**
+     * Debounce function
+     */
+    debounce(func, wait, immediate) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                timeout = null;
+                if (!immediate) func(...args);
+            };
+            const callNow = immediate && !timeout;
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+            if (callNow) func(...args);
         };
-        const callNow = immediate && !timeout;
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-        if (callNow) func(...args);
-    };
-}
-
-// Throttle function
-function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-// CSS Animations für mobile Optimierung
-const mobileAnimationCSS = `
-/* Touch feedback animations */
-.touch-active {
-    transform: scale(0.95);
-    opacity: 0.7;
-    transition: all 0.1s ease-out;
-}
-
-/* Ripple effect animation */
-@keyframes ripple {
-    0% {
-        transform: scale(0);
-        opacity: 0.5;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0;
     }
 }
 
-/* Scroll animations */
-.animate-on-scroll {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.6s ease-out;
-}
+// Auto-Initialisierung
+document.addEventListener('DOMContentLoaded', () => {
+    window.cbsMobileOptimizer = new CBSMobileOptimizer();
+});
 
-.animate-in {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Reduced motion styles */
-.reduced-motion .animate-on-scroll,
-.reduced-motion .animate-in {
-    transition: none;
-    transform: none;
-    opacity: 1;
-}
-
-/* Keyboard open adjustments */
-.keyboard-open {
-    padding-bottom: 0;
-}
-
-.keyboard-open .footer {
-    display: none;
-}
-
-/* Data saver mode */
-.data-saver img {
-    display: none;
-}
-
-.data-saver .btn {
-    transition: none;
-}
-
-/* Focus visible styles */
-.focus-visible {
-    outline: 2px solid #0066cc !important;
-    outline-offset: 2px !important;
-}
-
-/* Safe area support */
-.has-safe-areas {
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-}
-
-.has-safe-areas .navbar {
-    padding-top: calc(0.5rem + env(safe-area-inset-top));
-}
-
-.has-safe-areas .footer {
-    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
-}
-`;
-
-// CSS-Styles dynamisch hinzufügen
-if (!document.getElementById('mobile-optimization-styles')) {
-    const style = document.createElement('style');
-    style.id = 'mobile-optimization-styles';
-    style.textContent = mobileAnimationCSS;
-    document.head.appendChild(style);
+// Export für Modul-Verwendung
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = CBSMobileOptimizer;
 }
