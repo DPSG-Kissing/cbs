@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", function() {
             mapManager = new CBSMapManager({
                 enableGeolocation: true,
                 enableClustering: true,
-                enableRouting: false, // Vorerst deaktiviert
+                enableRouting: true, // KORREKTUR: Routing hier aktivieren
                 tileProvider: 'osm',
                 clusterRadius: 50,
                 defaultZoom: 15
@@ -372,8 +372,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 const lat = parseFloat(button.dataset.lat);
                 const lng = parseFloat(button.dataset.lng);
                 if (!isNaN(lat) && !isNaN(lng)) {
-                    mapManager.map.setView([lat, lng], 18);
-                    document.getElementById('overview_map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // KORREKTUR: Die showRoute-Funktion des MapManagers aufrufen
+                    mapManager.showRoute(lat, lng);
                 }
             });
         });
@@ -405,7 +405,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const result = await response.json();
             if (result.success) {
                 showNotification(`Status erfolgreich auf "${newStatus === 1 ? "abgeholt" : "nicht abgeholt"}" geändert`, "success");
-                await fetchAndDisplayData(true); // Direkte Aktualisierung für alle
+                await fetchAndDisplayData(true);
             } else {
                 throw new Error(result.message || "Statusänderung fehlgeschlagen");
             }
@@ -432,7 +432,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const result = await response.json();
             if (result.success) {
                 showNotification("Eintrag erfolgreich gelöscht", "success");
-                await fetchAndDisplayData(true); // Direkte Aktualisierung für alle
+                await fetchAndDisplayData(true);
             } else {
                 throw new Error(result.message || "Löschen fehlgeschlagen");
             }
@@ -444,26 +444,21 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
     
-    // ** NEU: Automatische Aktualisierungslogik **
     function setupAutoRefresh() {
         setInterval(async () => {
-            // Nur aktualisieren, wenn der Tab sichtbar ist und keine andere Aktion läuft
             if (!isLoading && document.visibilityState === 'visible') {
                 const refreshButton = document.getElementById("refresh-data");
                 const icon = refreshButton ? refreshButton.querySelector('i') : null;
-
-                if (icon) icon.classList.add('bi-spin'); // Startet die Animation
+                if (icon) icon.classList.add('bi-spin');
                 
-                await fetchAndDisplayData(false); // `false`, um Lade-Overlay zu vermeiden
+                await fetchAndDisplayData(false);
                 
                 if (icon) {
-                    // Animation nach kurzer Verzögerung stoppen, damit sie sichtbar ist
                     setTimeout(() => icon.classList.remove('bi-spin'), 500);
                 }
             }
-        }, 7500); // Aktualisierungsintervall: 7,5 Sekunden
+        }, 7500);
 
-        // Auch aktualisieren, wenn der Tab wieder sichtbar wird
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible' && !isLoading) {
                 fetchAndDisplayData(true);
