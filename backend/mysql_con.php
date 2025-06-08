@@ -1,9 +1,15 @@
 <?php
-// Fehlerberichterstattung für Produktion deaktivieren
-if (getenv('ENVIRONMENT') !== 'development') {
+// Fehlerberichterstattung für Entwicklungsumgebungen aktivieren
+if (getenv('ENVIRONMENT') === 'development') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
     error_reporting(0);
     ini_set('display_errors', 0);
 }
+
+// Setzt den Content-Type Header für alle Antworten, die dieses Skript verwenden
+header("Content-Type: application/json; charset=utf-8");
 
 // Datenbankverbindungsparameter
 // WICHTIG: Diese Werte sollten in einer sicheren Umgebungsvariable oder Config-Datei stehen!
@@ -12,90 +18,43 @@ $username = "cbsammlung";
 $password = "ZZTTrs2rTQpJl5OmUPFv"; // Das zuletzt funktionierende Passwort
 $dbname = "cbsammlung";
 
-// Verbindungsoptionen für erhöhte Sicherheit
-$options = [
-    MYSQLI_OPT_CONNECT_TIMEOUT => 5,
-    // KORRIGIERT: Veralteter SQL-Modus 'NO_AUTO_CREATE_USER' wurde entfernt
-    MYSQLI_INIT_COMMAND => "SET sql_mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'",
-    MYSQLI_OPT_SSL_VERIFY_SERVER_CERT => true,
-];
+// mysqli initialisieren
+$conn = new mysqli();
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT); // Aktiviert Exception-Handling für mysqli
 
 try {
-    // Erstelle MySQLi-Verbindung mit Optionen
-    $conn = new mysqli();
-    
-    // Setze Verbindungsoptionen
-    foreach ($options as $option => $value) {
-        $conn->options($option, $value);
-    }
-    
-    // Stelle Verbindung her
+    // Verbindung herstellen
     $conn->real_connect($servername, $username, $password, $dbname);
     
-    // Prüfe Verbindung
-    if ($conn->connect_error) {
-        throw new Exception("Datenbankverbindung fehlgeschlagen: " . $conn->connect_error);
-    }
-    
     // Setze Zeichensatz auf UTF-8
-    if (!$conn->set_charset("utf8mb4")) {
-        throw new Exception("Fehler beim Setzen des UTF-8 Zeichensatzes: " . $conn->error);
-    }
+    $conn->set_charset("utf8mb4");
     
-    // Setze Zeitzone
+    // Setze Zeitzone und SQL-Modus
     $conn->query("SET time_zone = '+01:00'");
-    
-    // Aktiviere strikte SQL-Modi für bessere Datenintegrität
-    // KORRIGIERT: Veralteter SQL-Modus 'NO_AUTO_CREATE_USER' wurde entfernt
     $conn->query("SET SESSION sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'");
     
-} catch (Exception $e) {
-    // Log den Fehler (in Produktion sollte das in eine Log-Datei geschrieben werden)
-    if (getenv('ENVIRONMENT') === 'development') {
-        error_log("Database connection error: " . $e->getMessage());
-        die("Datenbankverbindung fehlgeschlagen. Bitte versuchen Sie es später erneut.");
-    } else {
-        // In Produktion keine Details preisgeben
-        http_response_code(500); // Wichtig, um dem Frontend einen Fehler zu signalisieren
-        die("Service temporär nicht verfügbar.");
-    }
+} catch (mysqli_sql_exception $e) {
+    // Bei einem Verbindungsfehler, sende eine strukturierte JSON-Antwort
+    http_response_code(500); // Internal Server Error
+    
+    // Logge den genauen Fehler serverseitig
+    error_log("Datenbankverbindungsfehler: " . $e->getMessage());
+    
+    // Sende eine generische Fehlermeldung an den Client
+    echo json_encode([
+        'success' => false,
+        'message' => 'Datenbankverbindungsfehler. Bitte kontaktieren Sie den Administrator.',
+        'error_code' => $e->getCode()
+    ]);
+    
+    exit; // Beende die Skriptausführung nach dem Fehler
 }
 
-// Funktion für sichere Datenbankabfragen
-function executeSecureQuery($conn, $query, $types = "", $params = []) {
-    try {
-        $stmt = $conn->prepare($query);
-        if (!$stmt) {
-            throw new Exception("Prepare failed: " . $conn->error);
-        }
-        
-        if (!empty($params)) {
-            $stmt->bind_param($types, ...$params);
-        }
-        
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
-        }
-        
-        return $stmt;
-    } catch (Exception $e) {
-        error_log("Query execution error: " . $e->getMessage());
-        throw $e;
-    }
-}
-
-// Funktion zum sicheren Schließen der Verbindung
-function closeConnection($conn) {
-    if ($conn && !$conn->connect_error) {
+// Funktion zum sicheren Schließen der Verbindung (optional, da PHP dies am Ende tut)
+register_shutdown_function(function() use ($conn) {
+    if ($conn instanceof mysqli && !$conn->connect_error) {
         $conn->close();
     }
-}
-
-// Register shutdown function für automatisches Schließen
-register_shutdown_function(function() use ($conn) {
-    closeConnection($conn);
 });
 
-// Setze Umgebungsvariable für Entwicklung. Für Produktion auskommentieren oder auf 'production' setzen.
-// putenv('ENVIRONMENT=development');
 ?>
