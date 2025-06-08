@@ -70,7 +70,7 @@ try {
 
     // Benachrichtige den WebSocket-Server über die neue Nachricht
     // Wir senden die Daten per HTTP-Request an einen internen Port des Chat-Servers
-    $ch = curl_init('http://127.0.0.1:8081'); // Interner Benachrichtigungs-Port
+    $ch = curl_init('http://127.0.0.1:8583'); // Interner Benachrichtigungs-Port
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(['action' => 'broadcast', 'data' => $messageData]));
     curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
