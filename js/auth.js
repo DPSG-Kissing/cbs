@@ -64,21 +64,22 @@ function showLoginModal() {
         // Event Listener für das Formular
         const loginForm = document.getElementById("login");
         if (loginForm) {
-            // Entferne alte Event Listener
+            // Entferne alte Event Listener, um doppelte Ausführungen zu vermeiden
             const newForm = loginForm.cloneNode(true);
             loginForm.parentNode.replaceChild(newForm, loginForm);
             
             newForm.addEventListener("submit", async function(event) {
                 event.preventDefault();
 
-                const password = document.getElementById("password").value;
+                // KORRIGIERT: .trim() entfernt versehentliche Leerzeichen
+                const password = document.getElementById("password").value.trim();
                 const passwordHash = await hash(password);
 
                 const isValid = await validatePasswordHash(passwordHash);
                 if (isValid) {
-                    setCookie("password_hash", passwordHash, 1);
+                    setCookie("password_hash", passwordHash, 1); // Cookie für 1 Tag setzen
                     modal.hide();
-                    // Seite neu laden nach erfolgreichem Login
+                    // Seite neu laden nach erfolgreichem Login, um Inhalte zu aktualisieren
                     window.location.reload();
                 } else {
                     alert("Falsches Passwort. Bitte versuche es erneut.");
@@ -102,6 +103,12 @@ async function validatePasswordHash(hash) {
             },
             body: `password_hash=${encodeURIComponent(hash)}`,
         });
+
+        // Prüft, ob der HTTP-Status erfolgreich war (z.B. 200 OK)
+        if (!response.ok) {
+            console.error(`Fehler vom Server: ${response.status} (${response.statusText})`);
+            return false;
+        }
 
         const result = await response.json();
         return result.success;
