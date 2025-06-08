@@ -2,14 +2,12 @@
 <html lang="de">
 
 <head>
-    <!-- Meta-Tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="description" content="CBS Tool - Christbaum-Sammlung der DPSG Kissing. Digitale Anmeldung für die jährliche Christbaum-Abholung.">
     <meta name="keywords" content="Christbaum, Sammlung, DPSG, Kissing, Anmeldung, Pfadfinder">
     <meta name="author" content="DPSG Kissing">
     
-    <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -18,31 +16,20 @@
     <meta name="msapplication-TileColor" content="#198754">
     <meta name="theme-color" content="#198754">
     
-    <!-- Resource Hints für Performance -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://api.openrouteservice.org" crossorigin>
     <link rel="dns-prefetch" href="https://tile.openstreetmap.org">
     
-    <!-- Bootstrap CSS 5.3.6 -->
-    <!-- RICHTIG -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" 
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" 
       crossorigin="anonymous">
     
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
     
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" 
           integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" 
           crossorigin="anonymous">
     
-    <!-- Leaflet MarkerCluster CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" 
-          integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" 
-          crossorigin="anonymous">
-    
-    <!-- KORRIGIERTE CSS-Pfade -->
     <link rel="stylesheet" href="css/css.css">
     <link rel="stylesheet" href="css/mobile-optimized-css.css">
     <link rel="stylesheet" href="css/leaflet-map-manager.css">
@@ -51,10 +38,8 @@
 </head>
 
 <body>
-    <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="visually-hidden-focusable">Zum Hauptinhalt springen</a>
     
-    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success position-sticky top-0" role="navigation" style="z-index: 1030;">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="index.html" aria-label="CBS Tool Startseite">
@@ -89,7 +74,6 @@
         </div>
     </nav>
 
-    <!-- Login Modal -->
     <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
             <div class="modal-content">
@@ -126,16 +110,14 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <main id="main-content" class="container mt-4" role="main">
-        <!-- Page Header -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card bg-light shadow-sm">
                     <div class="card-body text-center py-4">
                         <h1 class="card-title h2 text-success mb-3">
                             <i class="bi bi-tree-fill me-2" aria-hidden="true"></i>
-                            Christbaum-Sammlung 2026
+                            Christbaum-Sammlung 2025
                         </h1>
                         <p class="card-text lead mb-2">
                             Melden Sie Ihre Christbäume für die Abholung durch die DPSG Kissing an
@@ -148,14 +130,11 @@
             </div>
         </div>
 
-        <!-- Registration Form -->
         <form id="check" novalidate class="needs-validation">
             <fieldset>
                 <legend class="visually-hidden">Persönliche Daten</legend>
                 
-                <!-- Personal Information Row -->
                 <div class="row g-3">
-                    <!-- Name Input -->
                     <div class="col-12 col-md-6">
                         <label for="name" class="form-label fw-semibold">
                             <i class="bi bi-person-fill me-1" aria-hidden="true"></i>
@@ -173,10 +152,9 @@
                                required
                                style="min-height: 48px;">
                         <div id="nameHelp" class="form-text">Vor- und Nachname für die Anmeldung</div>
-                        <div class="invalid-feedback">Bitte geben Sie einen gültigen Namen ein (mindestens 2 Zeichen).</div>
+                        <div class="invalid-feedback">Bitte geben Sie einen gültigen Namen ein.</div>
                     </div>
                     
-                    <!-- Telefon Input -->
                     <div class="col-12 col-md-4">
                         <label for="telefonnummer" class="form-label fw-semibold">
                             <i class="bi bi-telephone-fill me-1" aria-hidden="true"></i>
@@ -188,7 +166,6 @@
                                name="telefonnummer"
                                placeholder="z.B. 08233 123456" 
                                inputmode="tel"
-                               pattern="[0-9 +()-]*"
                                autocomplete="tel"
                                aria-describedby="phoneHelp" 
                                required
@@ -197,7 +174,6 @@
                         <div class="invalid-feedback">Bitte geben Sie eine gültige Telefonnummer ein.</div>
                     </div>
                     
-                    <!-- Anzahl Bäume Input -->
                     <div class="col-12 col-md-2">
                         <label for="cb_anzahl" class="form-label fw-semibold">
                             <i class="bi bi-tree me-1" aria-hidden="true"></i>
@@ -213,7 +189,6 @@
                                value="1"
                                placeholder="z.B. 3"
                                inputmode="numeric"
-                               pattern="[0-9]*"
                                aria-describedby="treesHelp" 
                                required
                                style="min-height: 48px;">
@@ -226,9 +201,7 @@
             <fieldset>
                 <legend class="visually-hidden">Adresse und Bezahlung</legend>
                 
-                <!-- Address and Payment Row -->
                 <div class="row g-3 mt-2">
-                    <!-- Adresse Input -->
                     <div class="col-12 col-md-8">
                         <label for="inputAddress" class="form-label fw-semibold">
                             <i class="bi bi-geo-alt-fill me-1" aria-hidden="true"></i>
@@ -250,7 +223,6 @@
                         <div class="invalid-feedback">Bitte geben Sie eine gültige Adresse ein.</div>
                     </div>
                     
-                    <!-- Bezahlung Input -->
                     <div class="col-12 col-md-4">
                         <label for="inputMoney" class="form-label fw-semibold">
                             <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>
@@ -267,7 +239,6 @@
                                    name="money"
                                    placeholder="4,00" 
                                    inputmode="decimal"
-                                   pattern="[0-9.,]*"
                                    aria-describedby="moneyHelp" 
                                    required
                                    style="min-height: 48px;">
@@ -277,7 +248,6 @@
                     </div>
                 </div>
 
-                <!-- Submit Button -->
                 <div class="row mt-4">
                     <div class="col-12">
                         <button type="submit" 
@@ -296,12 +266,9 @@
             </fieldset>
         </form>
 
-        <!-- Address Selection Results -->
-        <div id="proof" class="invisible mb-4" role="region" aria-live="polite" aria-label="Adressauswahl">
-            <!-- Dynamic content will be inserted here -->
-        </div>
+        <div id="proof" class="invisible mb-4" role="region" aria-live="polite" aria-atomic="true" aria-label="Adressauswahl">
+            </div>
 
-        <!-- Map Container -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -318,7 +285,6 @@
                              role="img" 
                              aria-label="Interaktive Karte zur Adressanzeige"
                              tabindex="0">
-                            <!-- Map Loading Indicator -->
                             <div class="position-absolute top-50 start-50 translate-middle" id="map-loading">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Karte wird geladen...</span>
@@ -330,7 +296,6 @@
             </div>
         </div>
 
-        <!-- Success Confirmation -->
         <div id="confirmation" class="alert alert-success invisible shadow-sm" role="alert" aria-live="assertive">
             <div class="d-flex align-items-center mb-3">
                 <i class="bi bi-check-circle-fill me-2 fs-4" aria-hidden="true"></i>
@@ -338,17 +303,15 @@
             </div>
             <p class="mb-3">Die folgenden Daten wurden erfolgreich gespeichert:</p>
             <ul id="confirmationDetails" class="mb-3">
-                <!-- Confirmation details will be inserted here -->
-            </ul>
+                </ul>
             <hr>
             <p class="mb-0">
                 <i class="bi bi-info-circle-fill me-1" aria-hidden="true"></i>
-                Bei Fragen werden Sie per Telefon kontaktiert.
+                Sie erhalten weitere Informationen zur Abholung per Telefon.
             </p>
         </div>
     </main>
 
-    <!-- Enhanced Footer -->
     <footer class="bg-light mt-5 py-4 border-top" role="contentinfo">
         <div class="container">
             <div class="row g-3">
@@ -385,75 +348,18 @@
         </div>
     </footer>
 
-    <!-- Critical JavaScript Loading -->
-    <script>
-        // Immediate mobile detection and optimization
-        (function() {
-            'use strict';
-            
-            // Add mobile classes immediately
-            const userAgent = navigator.userAgent.toLowerCase();
-            const isIOS = /ipad|iphone|ipod/.test(userAgent);
-            const isAndroid = /android/.test(userAgent);
-            const isMobile = /mobile|android|iphone|ipod/.test(userAgent);
-            const isTablet = /ipad|android(?!.*mobile)|tablet/.test(userAgent);
-            
-            if (isIOS) document.documentElement.classList.add('ios');
-            if (isAndroid) document.documentElement.classList.add('android');
-            if (isMobile) document.documentElement.classList.add('mobile');
-            if (isTablet) document.documentElement.classList.add('tablet');
-            
-            // Immediate viewport height fix
-            const setVH = () => {
-                const vh = window.innerHeight * 0.01;
-                document.documentElement.style.setProperty('--vh', `${vh}px`);
-            };
-            setVH();
-            window.addEventListener('resize', setVH);
-            window.addEventListener('orientationchange', () => setTimeout(setVH, 100));
-            
-            // Prevent FOUC (Flash of Unstyled Content)
-            document.documentElement.style.visibility = 'visible';
-        })();
-    </script>
-
-    <!-- Scripts -->
-    <!-- Bootstrap JavaScript 5.3.6 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-j1CDi7MgGQ12Z7Qab0qlWQ/Qqz24Gc6BM0thvEMVjHnfYGF0rmFCozFSxQBxwHKO"
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
         crossorigin="anonymous"></script>
     
-    <!-- Leaflet JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" 
             integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" 
             crossorigin="anonymous"></script>
     
-    <!-- Leaflet MarkerCluster JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" 
-            integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" 
-            crossorigin="anonymous"></script>
-    
-    <!-- KORRIGIERTE JavaScript-Pfade -->
-    <script src="js/leaflet-map-manager.js"></script>
     <script src="js/mobile-optimized-js.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/anmeldung.js"></script> <!-- FEHLT! Das ist die Hauptlogik -->
+    <script src="js/anmeldung.js"></script>
     
-    <!-- Vereinfachte Anmeldung JS (da die originale unvollständig ist) -->
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            console.log("CBS Tool - Vereinfachte Version geladen");
-            
-            // Basis-Funktionalität für das Formular
-            const form = document.getElementById('check');
-            if (form) {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    alert('Formular-Funktionalität wird geladen...');
-                });
-            }
-        });
-    </script>
 </body>
 
 </html>
