@@ -35,6 +35,34 @@ if (count($_SESSION['login_attempts']) >= $maxAttempts) {
     exit;
 }
 
+// In der Datei backend/login.php
+
+// ...
+$correctHash = getPasswordHashFromDB($conn);
+
+// =================================================================
+// START: Temporärer Debug-Code (später wieder löschen)
+// =================================================================
+http_response_code(418); // Gibt einen ungewöhnlichen Fehlercode aus, damit wir ihn leicht finden
+header('Content-Type: application/json'); // Stellt sicher, dass die Antwort als JSON behandelt wird
+echo json_encode([
+    'debug_info' => 'Vergleiche die folgenden zwei Hash-Werte:',
+    'hash_vom_frontend_gesendet' => $inputHash,
+    'hash_aus_der_datenbank' => $correctHash,
+    'sind_identisch' => hash_equals($correctHash, $inputHash)
+], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+exit;
+// =================================================================
+// ENDE: Temporärer Debug-Code
+// =================================================================
+
+
+// Überprüfen, ob der Hash korrekt ist
+if (hash_equals($correctHash, $inputHash)) {
+// ... der Rest der Datei bleibt unverändert
+
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $inputHash = $_POST['password_hash'] ?? '';
     
