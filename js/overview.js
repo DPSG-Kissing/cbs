@@ -37,6 +37,9 @@ document.addEventListener("DOMContentLoaded", function() {
             // Daten laden
             await fetchAndDisplayData();
             
+            // Automatische Synchronisation starten
+            setupAutoRefresh();
+            
             console.log('CBS Overview erfolgreich initialisiert');
             
         } catch (error) {
@@ -70,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
 
-        // Refresh Button (optional)
+        // Refresh Button
         const refreshButton = document.getElementById("refresh-data");
         if (refreshButton) {
             refreshButton.addEventListener("click", () => {
@@ -154,18 +157,15 @@ document.addEventListener("DOMContentLoaded", function() {
             row.style.display = match ? "" : "none";
         });
 
-        // Update statistics for visible rows
         updateVisibleStatistics();
     }
 
     function handleKeyboardShortcuts(event) {
-        // Ctrl/Cmd + R: Refresh data
         if ((event.ctrlKey || event.metaKey) && event.key === 'r') {
             event.preventDefault();
             fetchAndDisplayData(true);
         }
 
-        // F: Toggle filter
         if (event.key === 'f' && !event.ctrlKey && !event.metaKey) {
             const searchInput = document.getElementById("filter-input");
             if (searchInput && document.activeElement !== searchInput) {
@@ -174,13 +174,11 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        // L: Toggle location
         if (event.key === 'l' && !event.ctrlKey && !event.metaKey) {
             event.preventDefault();
             toggleLocation();
         }
 
-        // Escape: Clear search
         if (event.key === 'Escape') {
             const searchInput = document.getElementById("filter-input");
             if (searchInput && searchInput.value) {
@@ -195,9 +193,8 @@ document.addEventListener("DOMContentLoaded", function() {
         
         try {
             isLoading = true;
-            showLoading(true);
+            if (forceRefresh) showLoading(true);
             
-            // Cache-Buster für Force Refresh
             const url = forceRefresh ? 
                 `${apiBase}get_data.php?_t=${Date.now()}` : 
                 `${apiBase}get_data.php`;
@@ -206,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
-                    "Cache-Control": forceRefresh ? "no-cache" : "max-age=60"
+                    "Cache-Control": forceRefresh ? "no-cache" : "max-age=5"
                 },
             });
 
@@ -216,7 +213,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
             const data = await response.json();
             
-            // Validate data structure
             if (!Array.isArray(data)) {
                 throw new Error('Invalid data format received');
             }
@@ -233,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
             showNotification("Fehler beim Laden der Daten: " + error.message, "error");
         } finally {
             isLoading = false;
-            showLoading(false);
+            if (forceRefresh) showLoading(false);
         }
     }
 
@@ -244,10 +240,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function updateMap(data) {
-        // Clear existing markers
         mapManager.clearMarkers();
-
-        // Add markers for each entry
         data.forEach(entry => {
             try {
                 const markerData = {
@@ -259,18 +252,10 @@ document.addEventListener("DOMContentLoaded", function() {
                     geld: parseFloat(entry.geld),
                     status: parseInt(entry.status),
                     lat: parseFloat(entry.lat),
-                    lng: parseFloat(entry.lng),
-                    created_at: entry.created_at,
-                    updated_at: entry.updated_at
+                    lng: parseFloat(entry.lng)
                 };
 
-                // Validate coordinates
-                if (isNaN(markerData.lat) || isNaN(markerData.lng) ||
-                    Math.abs(markerData.lat) > 90 || Math.abs(markerData.lng) > 180) {
-                    console.warn('Invalid coordinates for entry:', entry.id);
-                    return;
-                }
-
+                if (isNaN(markerData.lat) || isNaN(markerData.lng)) return;
                 mapManager.addMarker(markerData.lat, markerData.lng, markerData);
                 
             } catch (error) {
@@ -278,11 +263,8 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
 
-        // Fit map to markers if we have data
         if (data.length > 0) {
-            setTimeout(() => {
-                mapManager.fitToMarkers([20, 20]);
-            }, 100);
+            setTimeout(() => mapManager.fitToMarkers([20, 20]), 100);
         }
     }
 
@@ -291,61 +273,29 @@ document.addEventListener("DOMContentLoaded", function() {
         if (!tableBody) return;
 
         let rows = "";
-        let displayedCount = 0;
-
         data.forEach((entry, index) => {
             const statusClass = entry.status == 1 ? "table-success" : "table-danger";
             const shouldShow = entry.status == 0 || showAbgeholte;
             const displayStyle = shouldShow ? "" : "display: none;";
             
-            if (shouldShow) {
-                displayedCount++;
-            }
-
-            // Enhanced row with better accessibility
             rows += `
-                <tr id="row-${entry.id}" class="${statusClass}" style="${displayStyle}" 
-                    data-entry-id="${entry.id}" data-status="${entry.status}">
+                <tr id="row-${entry.id}" class="${statusClass}" style="${displayStyle}" data-entry-id="${entry.id}" data-status="${entry.status}">
                     <th scope="row">${index + 1}</th>
                     <td>
                         <div class="d-flex align-items-center">
-                            <span class="me-2">${escapeHtml(entry.name)}</span>
+                            <span>${escapeHtml(entry.name)}</span>
                             ${entry.status == 1 ? '<span class="badge bg-success ms-auto">✓</span>' : ''}
                         </div>
                     </td>
-                    <td>
-                        <span title="${escapeHtml(entry.strasse)}">${escapeHtml(truncateText(entry.strasse, 30))}</span>
-                    </td>
-                    <td>
-                        <a href="tel:${escapeHtml(entry.telefonnummer)}" class="text-decoration-none">
-                            ${escapeHtml(entry.telefonnummer)}
-                        </a>
-                    </td>
-                    <td class="text-center">
-                        <span class="badge bg-primary">${entry.cb_anzahl}</span>
-                    </td>
-                    <td class="text-end">
-                        <strong>€${parseFloat(entry.geld).toFixed(2)}</strong>
-                    </td>
+                    <td><span title="${escapeHtml(entry.strasse)}">${escapeHtml(truncateText(entry.strasse, 30))}</span></td>
+                    <td><a href="tel:${escapeHtml(entry.telefonnummer)}">${escapeHtml(entry.telefonnummer)}</a></td>
+                    <td class="text-center"><span class="badge bg-primary">${entry.cb_anzahl}</span></td>
+                    <td class="text-end"><strong>€${parseFloat(entry.geld).toFixed(2)}</strong></td>
                     <td>
                         <div class="btn-group btn-group-sm" role="group">
-                            <button class="btn btn-outline-primary btn-map" 
-                                    data-lat="${entry.lat}" data-lng="${entry.lng}"
-                                    title="Auf Karte anzeigen">
-                                📍
-                            </button>
-                            <button class="btn btn-outline-${entry.status == 1 ? 'warning' : 'success'} btn-status" 
-                                    data-id="${entry.id}" data-status="${entry.status}"
-                                    title="${entry.status == 1 ? 'Als nicht abgeholt markieren' : 'Als abgeholt markieren'}">
-                                ${entry.status == 1 ? '↩️' : '✅'}
-                            </button>
-                            <button class="btn btn-outline-danger btn-delete" 
-                                    data-id="${entry.id}" 
-                                    data-name="${escapeHtml(entry.name)}" 
-                                    data-strasse="${escapeHtml(entry.strasse)}"
-                                    title="Eintrag löschen">
-                                🗑️
-                            </button>
+                            <button class="btn btn-outline-primary btn-map" data-lat="${entry.lat}" data-lng="${entry.lng}" title="Auf Karte anzeigen">📍</button>
+                            <button class="btn btn-outline-${entry.status == 1 ? 'warning' : 'success'} btn-status" data-id="${entry.id}" data-status="${entry.status}" title="${entry.status == 1 ? 'Als nicht abgeholt markieren' : 'Als abgeholt markieren'}">${entry.status == 1 ? '↩️' : '✅'}</button>
+                            <button class="btn btn-outline-danger btn-delete" data-id="${entry.id}" data-name="${escapeHtml(entry.name)}" data-strasse="${escapeHtml(entry.strasse)}" title="Eintrag löschen">🗑️</button>
                         </div>
                     </td>
                 </tr>`;
@@ -358,60 +308,33 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function updateTableStatistics(data) {
         const visibleData = showAbgeholte ? data : data.filter(entry => entry.status == 0);
-        
         const totalEntries = visibleData.length;
         const totalTrees = visibleData.reduce((sum, entry) => sum + parseInt(entry.cb_anzahl), 0);
         const totalMoney = visibleData.reduce((sum, entry) => sum + parseFloat(entry.geld), 0);
         const completedEntries = visibleData.filter(entry => entry.status == 1).length;
 
-        // Add or update statistics row
         const tableBody = document.getElementById("table_overview");
         const existingStatsRow = tableBody.querySelector('.table-stats');
-        
-        if (existingStatsRow) {
-            existingStatsRow.remove();
-        }
+        if (existingStatsRow) existingStatsRow.remove();
 
-        const statsRow = `
-            <tr class="table-info table-stats">
-                <th scope="row"><strong>📊</strong></th>
-                <td><strong>Gesamt (${totalEntries})</strong></td>
-                <td colspan="2">
-                    <small>
-                        ${completedEntries} abgeholt, 
-                        ${totalEntries - completedEntries} offen
-                    </small>
-                </td>
-                <td class="text-center"><strong>${totalTrees}</strong></td>
-                <td class="text-end"><strong>€${totalMoney.toFixed(2)}</strong></td>
-                <td></td>
-            </tr>`;
-
+        const statsRow = `<tr class="table-info table-stats"><th scope="row"><strong>📊</strong></th><td><strong>Gesamt (${totalEntries})</strong></td><td colspan="2"><small>${completedEntries} abgeholt, ${totalEntries - completedEntries} offen</small></td><td class="text-center"><strong>${totalTrees}</strong></td><td class="text-end"><strong>€${totalMoney.toFixed(2)}</strong></td><td></td></tr>`;
         tableBody.insertAdjacentHTML('beforeend', statsRow);
     }
 
     function updateStatistics(data) {
-        // Update page-level statistics if elements exist
         const statsElements = {
             total: document.getElementById('stats-total'),
             completed: document.getElementById('stats-completed'),
-            pending: document.getElementById('stats-pending'),
-            trees: document.getElementById('stats-trees'),
             money: document.getElementById('stats-money')
         };
-
         const stats = {
             total: data.length,
             completed: data.filter(entry => entry.status == 1).length,
-            pending: data.filter(entry => entry.status == 0).length,
-            trees: data.reduce((sum, entry) => sum + parseInt(entry.cb_anzahl), 0),
             money: data.reduce((sum, entry) => sum + parseFloat(entry.geld), 0)
         };
-
         Object.keys(statsElements).forEach(key => {
             if (statsElements[key]) {
-                const value = key === 'money' ? `€${stats[key].toFixed(2)}` : stats[key];
-                statsElements[key].textContent = value;
+                statsElements[key].textContent = key === 'money' ? `€${stats[key].toFixed(2)}` : stats[key];
             }
         });
     }
@@ -420,17 +343,14 @@ document.addEventListener("DOMContentLoaded", function() {
         const visibleRows = document.querySelectorAll("#table_overview tr:not(.table-stats):not([style*='display: none'])");
         const count = visibleRows.length;
         
-        // Update search results indicator
         const searchInput = document.getElementById("filter-input");
+        const indicator = document.getElementById('search-results') || createSearchResultsIndicator();
+        
         if (searchInput && searchInput.value.trim()) {
-            const indicator = document.getElementById('search-results') || createSearchResultsIndicator();
             indicator.textContent = `${count} Ergebnisse gefunden`;
             indicator.style.display = 'block';
         } else {
-            const indicator = document.getElementById('search-results');
-            if (indicator) {
-                indicator.style.display = 'none';
-            }
+            indicator.style.display = 'none';
         }
     }
 
@@ -438,51 +358,33 @@ document.addEventListener("DOMContentLoaded", function() {
         const indicator = document.createElement('div');
         indicator.id = 'search-results';
         indicator.className = 'alert alert-info alert-sm mt-2';
-        
         const searchInput = document.getElementById("filter-input");
         if (searchInput && searchInput.parentNode) {
             searchInput.parentNode.appendChild(indicator);
         }
-        
         return indicator;
     }
 
     function setupTableButtonListeners() {
-        // Map view buttons
         document.querySelectorAll(".btn-map").forEach(button => {
             button.addEventListener("click", (event) => {
                 event.preventDefault();
                 const lat = parseFloat(button.dataset.lat);
                 const lng = parseFloat(button.dataset.lng);
-                
                 if (!isNaN(lat) && !isNaN(lng)) {
                     mapManager.map.setView([lat, lng], 18);
-                    
-                    // Scroll to map
-                    document.getElementById('overview_map').scrollIntoView({ 
-                        behavior: 'smooth', 
-                        block: 'center' 
-                    });
+                    document.getElementById('overview_map').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
         });
 
-        // Status change buttons
         document.querySelectorAll(".btn-status").forEach(button => {
             button.addEventListener("click", (event) => {
                 event.preventDefault();
-                const id = button.dataset.id;
-                const currentStatus = parseInt(button.dataset.status);
-                
-                handleStatusChange({
-                    id: id,
-                    status: currentStatus,
-                    button: button
-                });
+                handleStatusChange({ id: button.dataset.id, status: parseInt(button.dataset.status), button });
             });
         });
 
-        // Delete buttons
         document.querySelectorAll(".btn-delete").forEach(button => {
             button.addEventListener("click", (event) => {
                 event.preventDefault();
@@ -491,35 +393,19 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    async function handleStatusChange(data) {
-        const { id, status, button } = data;
+    async function handleStatusChange({ id, status }) {
         const newStatus = status === 0 ? 1 : 0;
-
         try {
             showLoading(true);
-            
             const response = await fetch(`${apiBase}change.php`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
                 body: `id=${encodeURIComponent(id)}&status=${newStatus}`,
             });
-
             const result = await response.json();
-            
             if (result.success) {
-                const statusText = newStatus === 1 ? "abgeholt" : "nicht abgeholt";
-                showNotification(`Status erfolgreich auf "${statusText}" geändert`, "success");
-                
-                // Update local data
-                const entry = currentData.find(item => item.id == id);
-                if (entry) {
-                    entry.status = newStatus;
-                }
-                
-                await fetchAndDisplayData(); // Refresh to ensure consistency
-                
+                showNotification(`Status erfolgreich auf "${newStatus === 1 ? "abgeholt" : "nicht abgeholt"}" geändert`, "success");
+                await fetchAndDisplayData(true); // Direkte Aktualisierung für alle
             } else {
                 throw new Error(result.message || "Statusänderung fehlgeschlagen");
             }
@@ -532,38 +418,21 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     async function handleDelete(button) {
-        const entryId = button.dataset.id;
-        const entryName = button.dataset.name;
-        const entryStrasse = button.dataset.strasse;
-
-        const confirmed = await showConfirmDialog(
-            'Eintrag löschen',
-            `Möchten Sie wirklich den Eintrag von "${entryName}, ${entryStrasse}" löschen?`,
-            'Diese Aktion kann nicht rückgängig gemacht werden.'
-        );
-
+        const { id, name, strasse } = button.dataset;
+        const confirmed = await showConfirmDialog('Eintrag löschen', `Möchten Sie den Eintrag für "${name}, ${strasse}" wirklich löschen?`);
         if (!confirmed) return;
 
         try {
             showLoading(true);
-            
             const response = await fetch(`${apiBase}delete.php`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-                body: `id=${encodeURIComponent(entryId)}`,
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `id=${encodeURIComponent(id)}`,
             });
-
             const result = await response.json();
-            
             if (result.success) {
                 showNotification("Eintrag erfolgreich gelöscht", "success");
-                
-                // Remove from local data
-                currentData = currentData.filter(item => item.id != entryId);
-                updateDisplay();
-                
+                await fetchAndDisplayData(true); // Direkte Aktualisierung für alle
             } else {
                 throw new Error(result.message || "Löschen fehlgeschlagen");
             }
@@ -573,6 +442,33 @@ document.addEventListener("DOMContentLoaded", function() {
         } finally {
             showLoading(false);
         }
+    }
+    
+    // ** NEU: Automatische Aktualisierungslogik **
+    function setupAutoRefresh() {
+        setInterval(async () => {
+            // Nur aktualisieren, wenn der Tab sichtbar ist und keine andere Aktion läuft
+            if (!isLoading && document.visibilityState === 'visible') {
+                const refreshButton = document.getElementById("refresh-data");
+                const icon = refreshButton ? refreshButton.querySelector('i') : null;
+
+                if (icon) icon.classList.add('bi-spin'); // Startet die Animation
+                
+                await fetchAndDisplayData(false); // `false`, um Lade-Overlay zu vermeiden
+                
+                if (icon) {
+                    // Animation nach kurzer Verzögerung stoppen, damit sie sichtbar ist
+                    setTimeout(() => icon.classList.remove('bi-spin'), 500);
+                }
+            }
+        }, 7500); // Aktualisierungsintervall: 7,5 Sekunden
+
+        // Auch aktualisieren, wenn der Tab wieder sichtbar wird
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && !isLoading) {
+                fetchAndDisplayData(true);
+            }
+        });
     }
 
     // Utility functions
@@ -589,20 +485,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function showLoading(show) {
         let loader = document.getElementById('loading-indicator');
-        
         if (show && !loader) {
             loader = document.createElement('div');
             loader.id = 'loading-indicator';
             loader.className = 'position-fixed top-50 start-50 translate-middle';
             loader.style.zIndex = '9999';
-            loader.innerHTML = `
-                <div class="d-flex flex-column align-items-center bg-white p-4 rounded shadow">
-                    <div class="spinner-border text-primary mb-2" role="status">
-                        <span class="visually-hidden">Laden...</span>
-                    </div>
-                    <small class="text-muted">Daten werden aktualisiert...</small>
-                </div>
-            `;
+            loader.innerHTML = `<div class="d-flex flex-column align-items-center bg-white p-4 rounded shadow"><div class="spinner-border text-primary mb-2" role="status"></div><small class="text-muted">Lade...</small></div>`;
             document.body.appendChild(loader);
         } else if (!show && loader) {
             loader.remove();
@@ -610,91 +498,29 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function showNotification(message, type = 'info', duration = 5000) {
-        const alertClass = {
-            'success': 'alert-success',
-            'error': 'alert-danger',
-            'warning': 'alert-warning',
-            'info': 'alert-info'
-        }[type] || 'alert-info';
-
+        const alertClass = { 'success': 'alert-success', 'error': 'alert-danger', 'warning': 'alert-warning' }[type] || 'alert-info';
         const notification = document.createElement('div');
         notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
         notification.style.zIndex = '10000';
-        notification.style.maxWidth = '400px';
-        notification.innerHTML = `
-            <div style="white-space: pre-line;">${escapeHtml(message)}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-
+        notification.innerHTML = `<div>${escapeHtml(message)}</div><button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
         document.body.appendChild(notification);
-
-        // Auto-remove
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.remove();
-            }
-        }, duration);
+        setTimeout(() => notification.remove(), duration);
     }
 
-    async function showConfirmDialog(title, message, details = '') {
+    async function showConfirmDialog(title, message) {
         return new Promise((resolve) => {
             const modal = document.createElement('div');
             modal.className = 'modal fade show d-block';
             modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
-            modal.innerHTML = `
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">${escapeHtml(title)}</h5>
-                        </div>
-                        <div class="modal-body">
-                            <p class="mb-2">${escapeHtml(message)}</p>
-                            ${details ? `<small class="text-muted">${escapeHtml(details)}</small>` : ''}
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-action="cancel">Abbrechen</button>
-                            <button type="button" class="btn btn-danger" data-action="confirm">Löschen</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
+            modal.innerHTML = `<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">${escapeHtml(title)}</h5></div><div class="modal-body"><p>${escapeHtml(message)}</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-action="cancel">Abbrechen</button><button type="button" class="btn btn-danger" data-action="confirm">Löschen</button></div></div></div>`;
             document.body.appendChild(modal);
-
             modal.addEventListener('click', (e) => {
                 const action = e.target.dataset.action;
-                if (action === 'confirm') {
-                    resolve(true);
-                    modal.remove();
-                } else if (action === 'cancel' || e.target === modal) {
-                    resolve(false);
+                if (action) {
+                    resolve(action === 'confirm');
                     modal.remove();
                 }
             });
-
-            // ESC key handling
-            const escHandler = (e) => {
-                if (e.key === 'Escape') {
-                    resolve(false);
-                    modal.remove();
-                    document.removeEventListener('keydown', escHandler);
-                }
-            };
-            document.addEventListener('keydown', escHandler);
         });
     }
-
-    // Auto-refresh every 30 seconds (optional)
-    setInterval(() => {
-        if (!isLoading && document.visibilityState === 'visible') {
-            fetchAndDisplayData();
-        }
-    }, 30000);
-
-    // Refresh when page becomes visible again
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible' && !isLoading) {
-            fetchAndDisplayData();
-        }
-    });
 });
