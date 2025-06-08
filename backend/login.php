@@ -9,6 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    echo json_encode(['success' => false, 'message' => 'Nur POST-Methode erlaubt']);
+    exit;
+}
+
 session_start();
 include("mysql_con.php");
 
@@ -35,65 +41,64 @@ if (count($_SESSION['login_attempts']) >= $maxAttempts) {
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $inputHash = $_POST['password_hash'] ?? '';
-    
-    // Hash validieren
-    if (empty($inputHash) || !preg_match('/^[a-f0-9]{64}$/i', $inputHash)) {
-        $_SESSION['login_attempts'][] = time();
-        http_response_code(400);
-        echo json_encode([
-            "success" => false, 
-            "message" => "Ungültiges Hash-Format."
-        ]);
-        exit;
-    }
+// POST-Daten verarbeiten
+$inputHash = $_POST['password_hash'] ?? '';
 
-    // Passwort-Hash aus Datenbank laden
-    $correctHash = getPasswordHashFromDB($conn);
-    
-    
-
-    // Der folgende Code wird durch den "exit;" im Debug-Block nicht erreicht,
-    // bleibt aber für später erhalten.
-    if (hash_equals($correctHash, $inputHash)) {
-        $_SESSION['login_attempts'] = [];
-        $_SESSION['authenticated'] = true;
-        $_SESSION['auth_time'] = time();
-        logSuccessfulLogin($conn);
-        echo json_encode([
-            "success" => true,
-            "message" => "Anmeldung erfolgreich"
-        ]);
-    } else {
-        $_SESSION['login_attempts'][] = time();
-        http_response_code(401);
-        echo json_encode([
-            "success" => false, 
-            "message" => "Falsches Passwort."
-        ]);
-    }
-    
-    $conn->close();
+// Hash validieren
+if (empty($inputHash) || !preg_match('/^[a-f0-9]{64}$/i', $inputHash)) {
+    $_SESSION['login_attempts'][] = time();
+    http_response_code(400);
+    echo json_encode([
+        "success" => false, 
+        "message" => "Ungültiges Hash-Format."
+    ]);
     exit;
 }
 
-// Fallback
-http_response_code(405);
-echo json_encode([
-    "success" => false, 
-    "message" => "Nur POST-Methode erlaubt."
-]);
+// Passwort-Hash aus Datenbank laden
+$correctHash = getPasswordHashFromDB($conn);
+
+if (!$correctHash) {
+    // Fallback auf Standard-Hash falls DB-Eintrag fehlt
+    $correctHash = "dd26d2dc2a72e8b5b1528b24e4a7602c5e7c8e7e5b8b0c6dc60b1797db8c2ed2";
+}
+
+// Hash-Vergleich (timing-attack safe)
+if (hash_equals($correctHash, $inputHash)) {
+    $_SESSION['login_attempts'] = [];
+    $_SESSION['authenticated'] = true;
+    $_SESSION['auth_time'] = time();
+    logSuccessfulLogin($conn);
+    
+    echo json_encode([
+        "success" => true,
+        "message" => "Anmeldung erfolgreich"
+    ]);
+} else {
+    $_SESSION['login_attempts'][] = time();
+    http_response_code(401);
+    echo json_encode([
+        "success" => false, 
+        "message" => "Falsches Passwort."
+    ]);
+}
+
+$conn->close();
+exit;
 
 /**
  * Lädt das Passwort-Hash aus der Datenbank
  */
 function getPasswordHashFromDB($conn) {
-    $sql = "SELECT setting_value FROM settings WHERE setting_key = 'admin_password_hash' LIMIT 1";
-    $result = $conn->query($sql);
-    if ($result && $result->num_rows > 0) {
-        $row = $result->fetch_assoc();
-        return $row['setting_value'];
+    try {
+        $sql = "SELECT setting_value FROM settings WHERE setting_key = 'admin_password_hash' LIMIT 1";
+        $result = $conn->query($sql);
+        if ($result && $result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            return $row['setting_value'];
+        }
+    } catch (Exception $e) {
+        error_log("Error loading password hash: " . $e->getMessage());
     }
     return false;
 }
@@ -103,12 +108,16 @@ function getPasswordHashFromDB($conn) {
  */
 function loadSettings($conn) {
     $settings = [];
-    $sql = "SELECT setting_key, setting_value FROM settings";
-    $result = $conn->query($sql);
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $settings[$row['setting_key']] = $row['setting_value'];
+    try {
+        $sql = "SELECT setting_key, setting_value FROM settings";
+        $result = $conn->query($sql);
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $settings[$row['setting_key']] = $row['setting_value'];
+            }
         }
+    } catch (Exception $e) {
+        error_log("Error loading settings: " . $e->getMessage());
     }
     return $settings;
 }
@@ -117,7 +126,11 @@ function loadSettings($conn) {
  * Protokolliert erfolgreiche Logins
  */
 function logSuccessfulLogin($conn) {
-    $sql = "UPDATE settings SET setting_value = NOW() WHERE setting_key = 'last_admin_login'";
-    $conn->query($sql);
+    try {
+        $sql = "UPDATE settings SET setting_value = NOW() WHERE setting_key = 'last_admin_login'";
+        $conn->query($sql);
+    } catch (Exception $e) {
+        error_log("Error logging successful login: " . $e->getMessage());
+    }
 }
 ?>
