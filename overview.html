@@ -2,14 +2,12 @@
 <html lang="de">
 
 <head>
-    <!-- Meta-Tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, user-scalable=yes, viewport-fit=cover">
     <meta name="description" content="CBS Tool Übersicht - Verwaltung und Übersicht aller Christbaum-Anmeldungen der DPSG Kissing.">
     <meta name="keywords" content="Christbaum, Übersicht, Verwaltung, DPSG, Kissing, Admin">
     <meta name="author" content="DPSG Kissing">
     
-    <!-- PWA Meta Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -18,14 +16,12 @@
     <meta name="msapplication-TileColor" content="#198754">
     <meta name="theme-color" content="#198754">
     
-    <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="CBS Tool Übersicht - DPSG Kissing">
     <meta property="og:description" content="Verwaltung und Übersicht aller Christbaum-Anmeldungen">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://cbs.pfadfinder-kissing.de/overview.html">
     <meta property="og:image" content="https://cbs.pfadfinder-kissing.de/images/og-image.png">
     
-    <!-- Touch Icons für alle Geräte -->
     <link rel="icon" type="image/png" sizes="32x32" href="images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="images/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon-180x180.png">
@@ -38,47 +34,37 @@
     <link rel="apple-touch-icon" sizes="60x60" href="images/apple-touch-icon-60x60.png">
     <link rel="apple-touch-icon" sizes="57x57" href="images/apple-touch-icon-57x57.png">
     
-    <!-- Android Chrome Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="images/android-chrome-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="images/android-chrome-512x512.png">
     
-    <!-- Microsoft Tiles -->
     <meta name="msapplication-TileImage" content="images/mstile-144x144.png">
     <meta name="msapplication-square70x70logo" content="images/mstile-70x70.png">
     <meta name="msapplication-square150x150logo" content="images/mstile-150x150.png">
     <meta name="msapplication-wide310x150logo" content="images/mstile-310x150.png">
     <meta name="msapplication-square310x310logo" content="images/mstile-310x310.png">
     
-    <!-- Resource Hints für Performance -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://api.openrouteservice.org" crossorigin>
     <link rel="dns-prefetch" href="https://tile.openstreetmap.org">
     
-    <!-- Bootstrap CSS 5.3.6 -->
-    <!-- RICHTIG -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" 
       integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" 
       crossorigin="anonymous">
     
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
     
-    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" 
           integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" 
           crossorigin="anonymous">
     
-    <!-- Leaflet MarkerCluster CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" 
           integrity="sha384-pmjIAcz2bAn0xukfxADbZIb3t8oRT9Sv0rvO+BR5Csr6Dhqq+nZs59P0pPKQJkEV" 
           crossorigin="anonymous">
     
-    <!-- Custom Styles -->
     <link rel="stylesheet" href="css/css.css">
     <link rel="stylesheet" href="css/mobile-optimized-css.css">
     <link rel="stylesheet" href="css/leaflet-map-manager.css">
     
-    <!-- Critical CSS Preload -->
     <link rel="preload" href="js/mobile-optimized-js.js" as="script">
     <link rel="preload" href="js/leaflet-map-manager.js" as="script">
     <link rel="preload" href="js/auth.js" as="script">
@@ -88,10 +74,8 @@
 </head>
 
 <body>
-    <!-- Skip to main content for accessibility -->
     <a href="#main-content" class="visually-hidden-focusable">Zum Hauptinhalt springen</a>
     
-    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-success position-sticky top-0" role="navigation" style="z-index: 1030;">
         <div class="container-fluid">
             <a class="navbar-brand d-flex align-items-center" href="index.html" aria-label="CBS Tool Startseite">
@@ -99,7 +83,6 @@
                 <small class="d-none d-sm-inline ms-2">Christbaum-Sammlung</small>
             </a>
             
-            <!-- Enhanced Mobile Toggle Button -->
             <button class="navbar-toggler border-0 p-2" type="button" 
                     data-bs-toggle="collapse" 
                     data-bs-target="#navbarNavAltMarkup" 
@@ -127,7 +110,6 @@
         </div>
     </nav>
 
-    <!-- Login Modal -->
     <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true" role="dialog">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
             <div class="modal-content">
@@ -162,9 +144,7 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <main id="main-content" class="container-fluid mt-4" role="main">
-        <!-- Page Header with Statistics -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card bg-light shadow-sm">
@@ -207,7 +187,6 @@
             </div>
         </div>
 
-        <!-- Control Panel -->
         <div class="row mb-4 g-3">
             <div class="col-12 col-sm-6 col-lg-3">
                 <button id="toggle-location" class="btn btn-primary w-100 d-flex align-items-center justify-content-center" 
@@ -243,7 +222,6 @@
             </div>
         </div>
 
-        <!-- Map Container -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -274,7 +252,6 @@
                              role="img" 
                              aria-label="Interaktive Karte mit allen Anmeldungen"
                              tabindex="0">
-                            <!-- Map Loading Indicator -->
                             <div class="position-absolute top-50 start-50 translate-middle" id="map-loading">
                                 <div class="spinner-border text-primary" role="status">
                                     <span class="visually-hidden">Karte wird geladen...</span>
@@ -286,12 +263,9 @@
             </div>
         </div>
 
-        <!-- Search Results Indicator -->
         <div id="search-results" class="alert alert-info d-none shadow-sm" role="status" aria-live="polite">
-            <!-- Dynamic search results info -->
-        </div>
+            </div>
 
-        <!-- Data Table -->
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm">
@@ -316,7 +290,6 @@
                             <table class="table table-hover table-striped mb-0" role="table">
                                 <thead class="table-dark sticky-top">
                                     <tr>
-                                        <!-- Checkbox Column -->
                                         <th scope="col" class="text-center" style="width: 60px;">
                                             <div class="form-check d-flex justify-content-center">
                                                 <input class="form-check-input" 
@@ -327,12 +300,10 @@
                                             </div>
                                         </th>
                                         
-                                        <!-- Number Column -->
                                         <th scope="col" style="width: 60px;">
                                             <span class="fw-bold">Nr.</span>
                                         </th>
                                         
-                                        <!-- Name Column with Sort -->
                                         <th scope="col" style="min-width: 150px;">
                                             <button type="button" 
                                                     class="btn btn-link text-white p-0 text-decoration-none fw-bold d-flex align-items-center" 
@@ -344,7 +315,6 @@
                                             </button>
                                         </th>
                                         
-                                        <!-- Address Column -->
                                         <th scope="col" style="min-width: 200px;">
                                             <button type="button" 
                                                     class="btn btn-link text-white p-0 text-decoration-none fw-bold d-flex align-items-center" 
@@ -356,12 +326,10 @@
                                             </button>
                                         </th>
                                         
-                                        <!-- Phone Column -->
                                         <th scope="col" style="min-width: 120px;">
                                             <span class="fw-bold">Telefon</span>
                                         </th>
                                         
-                                        <!-- Count Column -->
                                         <th scope="col" class="text-center" style="width: 80px;">
                                             <div class="d-flex align-items-center justify-content-center">
                                                 <i class="bi bi-tree-fill me-1" aria-hidden="true"></i>
@@ -369,7 +337,6 @@
                                             </div>
                                         </th>
                                         
-                                        <!-- Money Column -->
                                         <th scope="col" class="text-end" style="width: 100px;">
                                             <button type="button" 
                                                     class="btn btn-link text-white p-0 text-decoration-none fw-bold" 
@@ -381,14 +348,12 @@
                                             </button>
                                         </th>
                                         
-                                        <!-- Actions Column -->
                                         <th scope="col" class="text-center" style="min-width: 180px;">
                                             <span class="fw-bold">Aktionen</span>
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody id="table_overview">
-                                    <!-- Dynamic content will be inserted here -->
                                     <tr>
                                         <td colspan="8" class="text-center py-5">
                                             <div class="spinner-border text-primary" role="status">
@@ -430,7 +395,6 @@
             </div>
         </div>
 
-        <!-- Bulk Actions Modal -->
         <div class="modal fade" id="bulkActionsModal" tabindex="-1" aria-labelledby="bulkActionsLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
                 <div class="modal-content">
@@ -476,7 +440,6 @@
             </div>
         </div>
 
-        <!-- Keyboard Shortcuts Help -->
         <div class="position-fixed bottom-0 start-0 p-3 d-none d-md-block" style="z-index: 1050;">
             <button type="button" class="btn btn-outline-secondary btn-sm shadow" id="show-shortcuts" 
                     title="Tastaturkürzel anzeigen" style="min-width: 44px; min-height: 44px;">
@@ -485,40 +448,30 @@
             </button>
         </div>
 
-        <!-- Shortcuts Modal -->
         <div class="modal fade" id="shortcutsModal" tabindex="-1" aria-labelledby="shortcutsLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
 
-<!-- Am Ende vor </body> -->
-<!-- Am Ende vor </body> -->
-
-<!-- jQuery (falls benötigt für Legacy-Code) -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" 
         integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" 
         crossorigin="anonymous"></script>
 
-<!-- Bootstrap Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" 
         integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" 
         crossorigin="anonymous"></script>
 
-<!-- Leaflet -->
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" 
         integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" 
         crossorigin="anonymous"></script>
 
-<!-- Leaflet MarkerCluster -->
 <script src="https://cdn.jsdelivr.net/npm/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" 
         integrity="sha384-eXVCORTRlv4FUUgS/xmOyr66XBVraen8ATNLMESp92FKXLAMiKkerixTiBvXriZr" 
         crossorigin="anonymous"></script>
 
-<!-- CBS Custom Scripts (Reihenfolge wichtig!) -->
 <script src="js/leaflet-map-manager.js"></script>
 <script src="js/mobile-optimized-js.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/overview.js"></script>
 
-<!-- Inline Styles für Map Manager (temporär) -->
 <style>
 /* CBS Layer Modal Styles */
 .cbs-layer-modal {
