@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let isLocationTracking = false;
 
     // DOM-Elemente
-    const tableBody = document.getElementById("table_overview");
+    const tableBody = document.getElementById("table_overview_body");
     const filterInput = document.getElementById("filter-input");
     const filterButton = document.getElementById("filter-button");
     const refreshButton = document.getElementById("refresh-data");
