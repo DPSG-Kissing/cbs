@@ -612,3 +612,18 @@ input[type="number"]::-webkit-inner-spin-button {
         transform: rotate(360deg);
     }
 }
+
+/* =====================================================
+   FIX FÜR TABELLEN-LAYOUT-VERSCHIEBUNG (aus letzter Antwort)
+   ===================================================== */
+
+#table_overview tr > td {
+    display: table-cell !important;
+    vertical-align: middle !important;
+    padding: 0.5rem 0.5rem !important;
+}
+
+#table_overview tr > td:nth-child(5) {
+    min-width: 120px !important;
+    white-space: nowrap;
+}
