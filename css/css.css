@@ -641,3 +641,9 @@ input[type="number"]::-webkit-inner-spin-button {
     max-width: 100% !important;
     box-sizing: border-box;
 }
+
+thead {
+  display: table-header-group !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
