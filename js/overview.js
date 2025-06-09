@@ -255,12 +255,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const summaryRow = document.createElement('tr');
         summaryRow.className = 'summary-row table-light fw-bold';
         summaryRow.innerHTML = `
-            <td colspan="3" class="text-end">Gesamt (${total} Einträge):</td>
-            <td class="text-center">${completed} abgeholt</td>
-            <td></td>
-            <td class="text-center">${totalTrees}</td>
-            <td class="text-end">€${totalMoney.toFixed(2)}</td>
-            <td></td>`;
+    <td colspan="3" class="text-end">Gesamt (${total} Einträge):</td>
+    <td class="text-center">${completed} abgeholt</td>
+    <td></td>
+    <td class="text-center">${totalTrees}</td>
+    <td class="text-end">€${totalMoney.toFixed(2)}</td>
+    <td></td>`;
         
         tableBody.appendChild(summaryRow);
     }
