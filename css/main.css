@@ -458,16 +458,10 @@ input[type="number"] {
 }
 
 /* Firefox specific */
-/* KORRIGIERT - Mit Standard Property */
 @-moz-document url-prefix() {
     input[type="number"] {
         -moz-appearance: textfield;
-        appearance: textfield;  /* Standard-Property ergänzt */
-    }
-    
-    .table-responsive {
-        scrollbar-width: thin;
-        scrollbar-color: #dadce0 #f1f3f4;
+        appearance: textfield;
     }
 }
 
@@ -1430,16 +1424,11 @@ input[type="number"] {
     }
 }
 
-/* Firefox specific optimizations */
+/* Firefox specific */
 @-moz-document url-prefix() {
     input[type="number"] {
         -moz-appearance: textfield;
-    }
-    
-    /* Firefox scrollbar styling */
-    .table-responsive {
-        scrollbar-width: thin;
-        scrollbar-color: #dadce0 #f1f3f4;
+        appearance: textfield;
     }
 }
 
