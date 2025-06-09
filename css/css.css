@@ -162,8 +162,14 @@ input[type="number"] {
 
 /* Table Responsiveness */
 .table-responsive {
-    -webkit-overflow-scrolling: touch;
+    width: 100%;
     overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    min-width: 100%;
+    table-layout: auto;
 }
 
 .table td,
