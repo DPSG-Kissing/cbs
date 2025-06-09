@@ -134,6 +134,7 @@ body {
 input[type="number"] {
     /* Spinner in Firefox ausblenden */
     -moz-appearance: textfield;
+    -webkit-appearance: none;
     appearance: textfield;
 }
 
@@ -433,7 +434,7 @@ input[type="number"] {
     input[type="number"]::-webkit-outer-spin-button,
     input[type="number"]::-webkit-inner-spin-button {
         -webkit-appearance: none;
-        appearance: none;  /* Standard Property hinzufügen */
+        appearance: none;
         margin: 0;
     }
     
@@ -456,18 +457,12 @@ input[type="number"] {
     }
 }
 
-input[type="number"]::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    appearance: none;  /* Diese Zeile hinzufügen */
-    margin: 0;
-}
-
 /* Firefox specific */
 /* KORRIGIERT - Mit Standard Property */
 @-moz-document url-prefix() {
     input[type="number"] {
         -moz-appearance: textfield;
-        appearance: textfield;  /* Standard Property hinzufügen */
+        appearance: textfield;  /* Standard-Property ergänzt */
     }
     
     .table-responsive {
@@ -476,15 +471,24 @@ input[type="number"]::-webkit-inner-spin-button {
     }
 }
 
+/* Samsung Internet specific */
+@supports (-webkit-text-stroke: 1px transparent) {
+    .btn {
+        -webkit-text-stroke: 0.5px transparent;
+    }
+}
+
 /* =====================================================
    ACCESSIBILITY ENHANCEMENTS
    ===================================================== */
 
+/* Enhanced focus indicators for all devices */
 *:focus {
     outline: 2px solid #0066cc;
     outline-offset: 2px;
 }
 
+/* Skip to content link */
 .visually-hidden-focusable:focus {
     position: fixed !important;
     top: var(--safe-area-top);
@@ -497,6 +501,7 @@ input[type="number"]::-webkit-inner-spin-button {
     border-radius: var(--spacing-xs);
 }
 
+/* High contrast mode support */
 @media (prefers-contrast: high) {
     .btn {
         border: 2px solid;
@@ -508,6 +513,7 @@ input[type="number"]::-webkit-inner-spin-button {
     }
 }
 
+/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -523,6 +529,7 @@ input[type="number"]::-webkit-inner-spin-button {
    PERFORMANCE OPTIMIZATIONS
    ===================================================== */
 
+/* Hardware acceleration for smooth animations */
 .btn,
 .card,
 .modal,
@@ -531,31 +538,41 @@ input[type="number"]::-webkit-inner-spin-button {
     transform: translateZ(0);
 }
 
+/* Optimize repaints */
 .table-responsive {
     contain: layout style paint;
 }
 
-/* =====================================================
-   MOBILE ANIMATIONS
-   ===================================================== */
-
-/* Touch feedback animations */
-.touch-active {
-    transform: scale(0.95);
-    opacity: 0.7;
-    transition: all 0.1s ease-out;
+/* Critical rendering optimization */
+.above-fold {
+    contain: layout style;
 }
 
-/* Ripple effect animation */
-@keyframes ripple {
-    0% {
-        transform: scale(0);
-        opacity: 0.5;
-    }
-    100% {
-        transform: scale(1);
-        opacity: 0;
-    }
+/* =====================================================
+   LOADING STATES
+   ===================================================== */
+
+/* Enhanced loading indicators for mobile */
+.spinner-border {
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    
+    /* Prevent interaction during loading */
+    touch-action: none;
+    pointer-events: auto;
 }
 
 /* =====================================================
@@ -563,6 +580,7 @@ input[type="number"]::-webkit-inner-spin-button {
    ===================================================== */
 
 @media print {
+    /* Hide interactive elements */
     .btn,
     .navbar,
     #mapid,
@@ -571,6 +589,7 @@ input[type="number"]::-webkit-inner-spin-button {
         display: none !important;
     }
     
+    /* Optimize table printing */
     .table {
         border-collapse: collapse;
     }
@@ -582,6 +601,7 @@ input[type="number"]::-webkit-inner-spin-button {
         font-size: 10pt;
     }
     
+    /* Print-friendly colors */
     .table-success {
         background-color: #e8f5e8 !important;
     }
@@ -642,10 +662,12 @@ input[type="number"]::-webkit-inner-spin-button {
     box-sizing: border-box;
 }
 
-thead {
-  display: table-header-group !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+thead, thead tr, thead th {
+    display: table-header-group !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: inherit !important;
+    color: inherit !important;
 }
 
 /**
@@ -1012,9 +1034,10 @@ body {
 
 /* Number input specific optimizations */
 input[type="number"] {
-    /* Force numeric keyboard on mobile */
-    inputmode: numeric;
-    pattern: "[0-9]*";
+    /* Spinner in Firefox ausblenden */
+    -moz-appearance: textfield;
+    -webkit-appearance: none;
+    appearance: textfield;
 }
 
 /* =====================================================
